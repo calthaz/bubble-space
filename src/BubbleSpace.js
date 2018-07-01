@@ -25,11 +25,11 @@ class BubbleSpace extends React.Component {
         bubbles[i].pos = null;
         activeBubbles.push(bubbles[i]);
       }
-    }*/
+    }
     const activeBubbles = bubbles.filter(bubble => bubble.active);
     this.state = {
       bubbles:activeBubbles, //what about subsequent updates? well, there is no way to know that...
-    };
+    };*/
   }
   
   render() {
@@ -45,6 +45,7 @@ class BubbleSpace extends React.Component {
           bubble={bubble} 
           grds = {grds}
           radiusOffset = {radiusOffset}
+          focusBubble = {this.props.focusBubble}
           /> 
         );
       /*}else{

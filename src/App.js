@@ -3,7 +3,9 @@ import logo from './logo.svg';
 import './App.css';
 import Navigation from './Navigation';
 import BubbleSpace from './BubbleSpace';
+import BubbleList from './BubbleList';
 import { createMuiTheme } from 'material-ui/styles';
+import globalVars from './Constants';
 
 const theme = createMuiTheme({
   palette: {
@@ -16,8 +18,8 @@ const theme = createMuiTheme({
 
 //buffer zone--------------------
 var space = null;
-var spaceWidth = 100;
-var spaceHeight = 100;
+var spaceWidth = globalVars.MIN_SPACE_WIDTH;
+var spaceHeight = globalVars.MIN_SPACE_HEIGHT;
 //------------------------------
 
 class App extends Component {
@@ -29,8 +31,15 @@ class App extends Component {
     if(window.localStorage.getItem("bubbleList")){
     	let temp = JSON.parse(window.localStorage.getItem("bubbleList"));
 			this.state.bubbles = temp;
-			console.log("Has a list");
 			this.state.maxId = this.state.bubbles.length; 
+			for (var i = 0; i < temp.length; i++) {
+				let n = parseInt(temp[i].id);
+				if(!isNaN(n) && n> this.state.maxID){
+					this.state.maxId = n;
+				}
+			}
+			console.log("Has a list");
+			console.log("maxId: "+ this.state.maxId);
 		}else{
 			this.state.bubbles = [{
 		        id: 1,
@@ -59,7 +68,7 @@ class App extends Component {
 		  this.state.maxId = 2;
 		}
     //let arr = Array(rows).fill().map(() => Array(columns).fill(0));
-  	space = Array(100).fill().map(() => Array(100).fill(0));
+  	space = Array(spaceHeight).fill().map(() => Array(spaceWidth).fill(0));
   	let SIZES = [0,1,2,3,4,5,6];
   	let MOVES = [[0,-1], [-1,-1], [1,-1], 
 				[-1, 0], [1, 0], 
@@ -73,7 +82,7 @@ class App extends Component {
 	    //SIZES: SIZES,//corresponds to radius 2,3,4,5,6,6-shadow
 			MOVES: MOVES,
 			//space: space,
-			radiusOffset,
+			radiusOffset,//needed
     };
     //----------init shadows---------------------
     let shadows=[]; 
@@ -134,15 +143,15 @@ class App extends Component {
     for (let i = 0; i < bubbles.length; i++) {
     	if(bubbles[i].active){
     		let pos = this.putBubble(bubbles[i], lastX, lastY);
-    			if(pos[0]>0){
-						//lastX = Math.min(this.state.spaceWidth, pos[0]+4);
-						//lastY = Math.min(this.state.spaceHeight, pos[1]+4);
-						bubbles[i].pos=pos; 
-						lastX = pos[0];
-						lastY = pos[1];
-						//if(i%10===0)
-							//console.log("Put bubble at "+pos[0]+", "+pos[1]+" with gridSize "+this.state.gridSize);
-					}
+  			if(pos[0]>0){
+					//lastX = Math.min(this.state.spaceWidth, pos[0]+4);
+					//lastY = Math.min(this.state.spaceHeight, pos[1]+4);
+					bubbles[i].pos=pos; 
+					lastX = pos[0];
+					lastY = pos[1];
+					//if(i%10===0)
+						//console.log("Put bubble at "+pos[0]+", "+pos[1]+" with gridSize "+this.state.gridSize);
+				}
     	}
     	
     }
@@ -227,6 +236,25 @@ class App extends Component {
   	})
   };
  	
+ 	focusBubble = (id) =>{
+ 		console.log("Focus bubble id: "+id);
+  	let bubbles = this.state.bubbles.slice();
+  	let b;
+  	let i=0;
+  	for(; i<bubbles.length; i++){
+  		if(bubbles[i].id === id){
+  			b = bubbles.splice(i, 1); //b is an array with length 1
+  			break;
+  		}
+  	}
+  	//console.log(b);
+  	bubbles = [...b, ...bubbles];
+  	//console.log(bubbles);
+  	this.setState({
+  		bubbles
+  	});
+ 	}
+
  	addBubble = (bubble) => {
     //addBubble(bubble) { 
   	//what's the difference between these two ways of declaring a function???
@@ -241,6 +269,23 @@ class App extends Component {
       spaceWidth,
       spaceHeight,
     });
+  };
+
+  updateBubble = (bubble) => {
+  	console.log("Update bubble id: "+bubble.id);
+  	const bubbles = this.state.bubbles.slice();
+  	let i=0;
+  	for(; i<bubbles.length; i++){
+  		if(bubbles[i].id === bubble.id){
+  			bubbles[i]=bubble;
+  			this.removeBubbleFromSpace(bubble.id); 
+  			bubble.pos = this.putBubble(bubble, 0, 0);
+  			break;
+  		}
+  	}
+  	this.setState({
+  		bubbles
+  	});
   };
 
 //flag: enforced stupid duplicate in Bubble.js
@@ -289,6 +334,14 @@ class App extends Component {
 		return xy;
 	}
 
+	removeBubbleFromSpace = (id)=>{
+		for (let i = 0; i < spaceWidth; i++) {
+			for (let j = 0; j < spaceHeight; j++) {
+				if(space[i][j] === id) space[i][j] = 0;
+			}
+		}
+	}
+
 	updateSpaceDimensions = (width, height) => {
 		//space[width][height]
 		let oldw = spaceWidth;
@@ -334,11 +387,13 @@ class App extends Component {
 	};
 
   deleteBubble = (id) => {
+  	console.log("Delete bubble id: "+id);
   	var bubbles = this.state.bubbles.slice();
   	let i=0;
   	for(; i<bubbles.length; i++){
   		if(bubbles[i].id === id){
   			bubbles.splice(i, 1);
+  			this.removeBubbleFromSpace(id); 
   			break;
   		}
   	}
@@ -357,15 +412,20 @@ class App extends Component {
       <div className="App">
         <BubbleSpace 
           bubbles={this.state.bubbles} 
-          bubbleStateUpdate = {this.handleBubbleStateUpdate} 
           spaceWidth = {this.state.spaceWidth}
           spaceHeight = {this.state.spaceHeight}
           gridSize = {this.state.gridSize}
           radiusOffset = {this.state.radiusOffset}
+          focusBubble = {this.focusBubble}
         />
         <Navigation 
-        addBubble = {this.addBubble}
-        saveList = {this.saveList}
+          addBubble = {this.addBubble}
+          saveList = {this.saveList}
+        />
+        <BubbleList
+          bubbles={this.state.bubbles} 
+          bubbleStateUpdate = {this.handleBubbleStateUpdate}
+          bubbleContentUpdate = {this.updateBubble}
         />
       </div>
     );

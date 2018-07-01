@@ -60,54 +60,14 @@ class Navigation extends React.Component {
   handleAddFormOpen = () => {
     this.setState({ addFormOpen: true });
   };
-
+ //copied
   handleAddFormClose = (value) => {
-  	//update depth exceeded?
-  	//console.log(value); //1000 undefined Navigation.js:66 
-  	//Maximum update depth exceeded. This can happen 
-  	//when a component repeatedly calls setState inside componentWillUpdate or componentDidUpdate. 
-  	//React limits the number of nested updates to prevent infinite loops.
-  	if(value=="cancel"){
-  		
-  	}else if(value=="add"){
-  		//check required fields
-  		this.props.addBubble(this.state.newBubble);
-  		this.setState({ newBubble: emptyFormBubble });
-  	}
     this.setState({ addFormOpen: false });
   };
 
   handleNavButtomChange = (event, value) => {
     this.setState({ navValue: value });
   };
-
-  //https://stackoverflow.com/questions/34072009/update-nested-object-with-es6-computed-property-name
-  //why not be a bit radical just this time
-  handleAddFormChange = name => event => {
-    this.setState({
-      ...this.state, //optional?
-      newBubble: {
-      	...this.state.newBubble,
-      	[name]: event.target.value,
-      }
-    });
-  };
-
-  handleAddFormCoordChange = index => event => {
-  	const coord = this.state.newBubble.coord.slice();
-  	const val = event.target.value; //number or empty string
-  	//console.log(val);
-  	if(val===''|| (val>=-5 && val<=5)){
-			coord[index] = val===''? '' : Math.floor(val);
-	  	this.setState({
-	      newBubble: {
-	      	...this.state.newBubble,
-	      	coord: coord,
-	      }
-	    });
-  	}
-  	
-  }
 
   render() {
     const { classes } = this.props;
@@ -121,9 +81,10 @@ class Navigation extends React.Component {
         	<BubbleDialog 
         		formOpen = {this.state.addFormOpen}
         		handleFormClose = {this.handleAddFormClose}
-        		handleFormChange = {this.handleAddFormChange}
-        		handleFormCoordChange= {this.handleAddFormCoordChange}
+        		action = {(bubble)=>this.props.addBubble(bubble)}
+        		//handleFormCoordChange= {this.handleAddFormCoordChange}
             title = {'Blow your mood bubble'}
+            actionName = {'add'}
             bubble = {newBubble}
         	/>
         <BottomNavigationAction disableRipple  label="View" value="favorites" icon={<FavoriteIcon />} />

@@ -30,17 +30,65 @@ const styles = theme =>({
 });
 
 class BubbleDialog extends React.Component {
+	constructor(props) {
+    	super(props);
+    	this.state = {
+    		buffer: this.props.bubble,
+    	}
+    }
+
+    handleFormChange = name => event => {
+    	this.setState({
+		    buffer: {
+		      ...this.state.buffer,
+		      [name]: event.target.value,
+		    }
+    	});
+  	};
+
+  	handleFormCoordChange = index => event => {
+    	const coord = this.state.buffer.coord.slice();
+    	const val = event.target.value; //number or empty string
+	    //console.log(val);
+	    if(val===''|| (val>=-5 && val<=5)){
+	      	coord[index] = val===''? '' : Math.floor(val);
+	      	this.setState({
+	       		buffer: {
+	          	...this.state.buffer,
+	          	coord: coord,
+	        	}
+	      	});
+	    }
+    
+  	}
+
+  	handleFormClose = (value) => {
+	  	//update depth exceeded?
+	  	//console.log(value); //1000 undefined Navigation.js:66 
+	  	//Maximum update depth exceeded. This can happen 
+	  	//when a component repeatedly calls setState inside componentWillUpdate or componentDidUpdate. 
+	  	//React limits the number of nested updates to prevent infinite loops.
+	  	if(value==="cancel"){
+	  		//msg: cancelled
+	  		this.setState({ buffer: this.props.bubble });
+	  	}else if(value===this.props.actionName){
+	  		//check required fields
+	  		this.props.action(this.state.buffer);	  		
+	  	}
+	    this.props.handleFormClose();
+  	};
 
 	render() {
       const { fullScreen } = this.props;
-      const { classes, bubble } = this.props;
-      const { formOpen, handleFormClose, handleFormChange, handleFormCoordChange } = this.props;
-      const { title } = this.props;
+      const { classes } = this.props; //bubble 
+      const { formOpen } = this.props;//, handleFormClose, handleFormChange, handleFormCoordChange
+      const { title, actionName } = this.props;
+      let bubble = this.state.buffer;
       return (
       	<Dialog
           fullScreen={fullScreen}
           open={formOpen}
-          onClose={handleFormClose}
+          onClose={this.handleFormClose}
           aria-labelledby="responsive-dialog-title"
         >
           <DialogTitle id="responsive-dialog-title">{title}</DialogTitle>
@@ -55,7 +103,7 @@ class BubbleDialog extends React.Component {
 		          className={classes.textField}
 		          value={bubble.title}
 		          onChange={//can't use ()=>... here
-		          	handleFormChange('title')}
+		          	this.handleFormChange('title')}
 		          margin="normal"
 		        />
 		        <TextField
@@ -63,14 +111,14 @@ class BubbleDialog extends React.Component {
 		          label="Date"
 		          className={classes.textField}
 		          value={bubble.date}
-		          onChange={handleFormChange('date')}
+		          onChange={this.handleFormChange('date')}
 		          margin="normal"
 		        />
 		        <TextField
 		          id="coord_0"
 		          label="Pleasure"
 		          value={bubble.coord[0]}
-		          onChange={handleFormCoordChange(0)}
+		          onChange={this.handleFormCoordChange(0)}
 		          type="number"
 		          className={classes.textField}
 		          InputLabelProps={{
@@ -82,7 +130,7 @@ class BubbleDialog extends React.Component {
 		          id="coord_1"
 		          label="Arousal"
 		          value={bubble.coord[1]}
-		          onChange={handleFormCoordChange(1)}
+		          onChange={this.handleFormCoordChange(1)}
 		          type="number"
 		          className={classes.textField}
 		          InputLabelProps={{
@@ -95,7 +143,7 @@ class BubbleDialog extends React.Component {
 		          label="Situation"
 		          multiline
 		          value={bubble.situation}
-		          onChange={handleFormChange('situation')}
+		          onChange={this.handleFormChange('situation')}
 		          className={classes.multilineField}
 		          margin="normal"
 		        />
@@ -104,7 +152,7 @@ class BubbleDialog extends React.Component {
 		          label="Thoughts"
 		          multiline
 		          value={bubble.thoughts}
-		          onChange={handleFormChange('thoughts')}
+		          onChange={this.handleFormChange('thoughts')}
 		          className={classes.multilineField}
 		          margin="normal"
 		        />
@@ -113,7 +161,7 @@ class BubbleDialog extends React.Component {
 		          label="Feelings"
 		          multiline
 		          value={bubble.feelings}
-		          onChange={handleFormChange('feelings')}
+		          onChange={this.handleFormChange('feelings')}
 		          className={classes.multilineField}
 		          margin="normal"
 		        />
@@ -124,12 +172,12 @@ class BubbleDialog extends React.Component {
               //that because you calling toggle inside the render method which will cause to re-render 
               //and toggle will call again and re-rendering again and so on
               //not onChange?
-            	() => handleFormClose('cancel')
+            	()=>this.handleFormClose('cancel')
             } color="primary">
               Cancel
             </Button>
-            <Button onClick={() => handleFormClose('add')} color="primary" autoFocus>
-              Add
+            <Button onClick={() => this.handleFormClose(actionName)} color="primary" autoFocus>
+              {actionName}
             </Button>
           </DialogActions>
         </Dialog>
