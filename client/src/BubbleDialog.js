@@ -111,10 +111,14 @@ class BubbleDialog extends React.Component {
 		        <TextField
 		          id="date"
 		          label="Date"
+		          type="date"
 		          className={classes.textField}
 		          value={bubble.date}
 		          onChange={this.handleFormChange('date')}
 		          margin="normal"
+		          InputLabelProps={{
+          			shrink: true,
+        		  }}
 		        />
 		        <TextField
 		          id="coord_0"

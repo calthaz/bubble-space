@@ -6,6 +6,10 @@ import BubbleSpace from './BubbleSpace';
 import BubbleList from './BubbleList';
 import { createMuiTheme } from 'material-ui/styles';
 import globalVars from './Constants';
+import axios from "axios";
+const io = require('socket.io-client');
+const socket = io.connect('http://localhost:3001', { transport : ['websocket', 'xhr-polling'] }
+);
 
 const theme = createMuiTheme({
   palette: {
@@ -30,68 +34,69 @@ class App extends Component {
     this.state = {};
     if(window.localStorage.getItem("bubbleList")){
     	let temp = JSON.parse(window.localStorage.getItem("bubbleList"));
-			this.state.bubbles = temp.sort(compareMoodCoord);
-			this.state.maxId = this.state.bubbles.length; 
-			for (var i = 0; i < temp.length; i++) {
-				let n = parseInt(temp[i].id);
-				if(!isNaN(n) && n> this.state.maxID){
-					this.state.maxId = n;
-				}
+		this.state.bubbles = temp.sort(compareMoodCoord);
+		this.state.maxId = this.state.bubbles.length; 
+		/*for (var i = 0; i < temp.length; i++) {
+			let n = parseInt(temp[i].id);
+			if(!isNaN(n) && n> this.state.maxID){
+				this.state.maxId = n;
 			}
-			console.log("Has a list");
-			console.log("maxId: "+ this.state.maxId);
-		}else{
-			this.state.bubbles = [{
-		        id: 1,
-		        coord:[1,1], 
-		        title: 'something happy and exciting',
-		        date: 'may 8, 2018',
-		        situation: 'just learned first half of the Fourier transform and started building this again.',
-		        thoughts: 'I should probably write a matlab demo about Fourier transform',
-		        feelings: 'excited, attempting???',
-		        tags: ['coding', 'math'],
-		        active: true,
-		        pos: [],
-		      },
-		      {
-		        id: 2,
-		        coord:[-3,-5], 
-		        title: 'sad sunny friday',
-		        date: 'may 4, Friday 2018',
-		        situation: 'German midterm, Vicky had to go home, awkward questions, went swimming, played piano with Jing, tried her dresses, looked good.',
-		        thoughts: 'No particular thoughts',
-		        feelings: 'sad, tired and wanna cry. i can actully cry without thinking about anything',
-		        tags: ['tired', 'cry'],
-		        active: true,
-		        pos:[],
-		      }];
-		  this.state.maxId = 2;
-		}
+		}*/
+		console.log("Has a list");
+		console.log("maxId: "+ this.state.maxId);
+	}else{
+		this.state.bubbles = [{
+	        id: 1,
+	        coord:[1,1], 
+	        title: 'something happy and exciting',
+	        date: 'may 8, 2018',
+	        situation: 'just learned first half of the Fourier transform and started building this again.',
+	        thoughts: 'I should probably write a matlab demo about Fourier transform',
+	        feelings: 'excited, attempting???',
+	        tags: ['coding', 'math'],
+	        active: true,
+	        pos: [],
+	      },
+	      {
+	        id: 2,
+	        coord:[-3,-5], 
+	        title: 'sad sunny friday',
+	        date: 'may 4, Friday 2018',
+	        situation: 'German midterm, Vicky had to go home, awkward questions, went swimming, played piano with Jing, tried her dresses, looked good.',
+	        thoughts: 'No particular thoughts',
+	        feelings: 'sad, tired and wanna cry. i can actully cry without thinking about anything',
+	        tags: ['tired', 'cry'],
+	        active: true,
+	        pos:[],
+	      }];
+	  this.state.maxId = 2;
+	}
+    //that = undefined;
     //let arr = Array(rows).fill().map(() => Array(columns).fill(0));
   	space = Array(spaceHeight).fill().map(() => Array(spaceWidth).fill(0));
   	let SIZES = [0,1,2,3,4,5,6];
   	let MOVES = [[0,-1], [-1,-1], [1,-1], 
 				[-1, 0], [1, 0], 
 				[0, 1], [-1, 1], [1, 1]];
-		const radiusOffset = 6;
+	const radiusOffset = 6;
     this.state = { 
     	...this.state,
-	    spaceWidth: 100,
+	    spaceWidth: 150,
 	    spaceHeight: 100,
 	    gridSize: 7,//may update...
 	    //SIZES: SIZES,//corresponds to radius 2,3,4,5,6,6-shadow
-			MOVES: MOVES,
-			//space: space,
-			radiusOffset,//needed
+		MOVES: MOVES,
+		//space: space,
+		radiusOffset,//needed
     };
     //----------init shadows---------------------
     let shadows=[]; 
-		/*
-			private static int[][][][] moveCover = new int[SIZES.length][MOVES.length][][];
-			private static int[][][][] moveRelease = new int[SIZES.length][MOVES.length][][];
-		*/
-		let moveCover = Array(SIZES.length).fill().map(() => Array(MOVES.length));
-		let moveRelease = Array(SIZES.length).fill().map(() => Array(MOVES.length));
+	/*
+		private static int[][][][] moveCover = new int[SIZES.length][MOVES.length][][];
+		private static int[][][][] moveRelease = new int[SIZES.length][MOVES.length][][];
+	*/
+	let moveCover = Array(SIZES.length).fill().map(() => Array(MOVES.length));
+	let moveRelease = Array(SIZES.length).fill().map(() => Array(MOVES.length));
     for(let n=0; n<SIZES.length; n++){//for each size once and for all
 		let r = n+radiusOffset;
 		let shadow = Array(2*r+1).fill().map(() => Array(2*r+1).fill(0));
@@ -135,31 +140,12 @@ class App extends Component {
 		moveRelease,
 		moveCover,
 	}
-    //----------put bubbles----------------------
-    let lastX = 0;
-    let lastY = 0;
-    const bubbles = this.state.bubbles;//.slice();
-    console.log(bubbles.length);
-    for (let i = 0; i < bubbles.length; i++) {
-    	if(bubbles[i].active){
-    		let pos = this.putBubble(bubbles[i], lastX, lastY);
-  			if(pos[0]>0){
-				//lastX = Math.min(this.state.spaceWidth, pos[0]+4);
-				//lastY = Math.min(this.state.spaceHeight, pos[1]+4);
-				bubbles[i].pos=pos; 
-				lastX = pos[0];
-				lastY = pos[1];
-				//if(i%10===0)
-					//console.log("Put bubble at "+pos[0]+", "+pos[1]+" with gridSize "+this.state.gridSize);
-			}
-    	}
-    	
-    }
-    this.state.bubbles = bubbles;
+
     //index.js:2178 Warning: Can't call setState on a component that is not yet mounted. This is a no-op, but it might indicate a bug in your application. 
     //Instead, assign to `this.state` directly or define a `state = {};` class property with the desired state in the App component.
     this.state.spaceWidth=spaceWidth;
     this.state.spaceHeight=spaceHeight;
+    this.synchronizeWithDB();
   };
 	//https://www.hawatel.com/blog/handle-window-resize-in-react/
 	/**
@@ -186,6 +172,47 @@ class App extends Component {
 	componentDidMount() {
 	    this.updateDimensionsAsWindowResizes();
 	    window.addEventListener("resize", this.updateDimensionsAsWindowResizes);
+	    let that = this;
+	    socket.on("addToClients", function(bubble){
+	    	let pos = that.putBubble(bubble, 0, 0);
+			bubble.pos=pos; 			
+	    	//should update pos?
+	    	that.setState({
+	      		bubbles: that.state.bubbles.concat([bubble]),
+	      		maxId: bubble.id,
+	      		spaceWidth,
+	      		spaceHeight,
+	    	});
+	    });
+	    socket.on("updateClients", function(bubble){
+	    	const bubbles = that.state.bubbles.slice();
+		  	let i=0;
+		  	for(; i<bubbles.length; i++){
+		  		if(bubbles[i].id === bubble.id){
+		  			bubbles[i]=bubble;
+		  			that.removeBubbleFromSpace(bubble.id); 
+		  			bubble.pos = that.putBubble(bubble, 0, 0);
+		  			break;
+		  		}
+		  	}
+		  	that.setState({
+		  		bubbles
+		  	});
+	    });
+	    socket.on("deleteInClients", function(id){
+	    	var bubbles = that.state.bubbles.slice();
+		  	let i=0;
+		  	for(; i<bubbles.length; i++){
+		  		if(bubbles[i].id === id){
+		  			bubbles.splice(i, 1);
+		  			that.removeBubbleFromSpace(id); 
+		  			break;
+		  		}
+		  	}
+		  	that.setState({
+		  		bubbles
+		  	});
+	    });
 	};
 
 	/**
@@ -195,6 +222,54 @@ class App extends Component {
 	    window.removeEventListener("resize", this.updateDimensionsAsWindowResizes);
 	};
 
+	synchronizeWithDB = () =>{
+		let that = this;
+		fetch("/api/getData") //proxy to localhost:3001/api/getData see server.js
+	    .then(data => data.json())
+	    .then(function(res){
+	      	if (res.data == undefined || res.data.length === 0){ 
+	      		console.log("initialize data base");
+	      		for (var i = that.state.bubbles.length - 1; i >= 0; i--) {     			
+				    axios.post("/api/putData", that.state.bubbles[i])
+				    .then(function (res) {
+				      if(res.data.success){
+				        socket.emit("addedToDB",  that.state.bubbles[i]); 
+				      }else{
+				      	console.log(res.data);
+				      }
+				    });
+	      		}
+	      	}else{
+	      		console.log("Pulling bubbles from DB");
+				const bubbles = res.data;
+				    //----------put bubbles----------------------
+			    let lastX = 0;
+			    let lastY = 0;
+			    
+			    console.log(bubbles.length);
+			    for (let i = 0; i < bubbles.length; i++) {
+			    	if(bubbles[i].active){
+			    		let pos = that.putBubble(bubbles[i], lastX, lastY);
+			  			if(pos[0]>0){
+							//lastX = Math.min(this.state.spaceWidth, pos[0]+4);
+							//lastY = Math.min(this.state.spaceHeight, pos[1]+4);
+							bubbles[i].pos=pos; 
+							lastX = pos[0];
+							lastY = pos[1];
+							//if(i%10===0)
+								//console.log("Put bubble at "+pos[0]+", "+pos[1]+" with gridSize "+this.state.gridSize);
+						}
+			    	}
+			    	
+			    }
+			    that.setState({bubbles});
+	      	}
+	    }).catch(function(error) {
+	        console.log(error);
+	        console.log("No Connection");
+	    });
+	}
+
   	/*
 	Turn a 2x2 map of points into an array of coordinates with non-zero values translated with offset (X, Y)
   	*/
@@ -202,7 +277,7 @@ class App extends Component {
 		let count = 0;
 		for(let i=0; i<chart.length; i++){
 			for(let j=0; j<chart[0].length; j++){
-				if(chart[i][j]!=0){
+				if(chart[i][j]!==0){
 					count++;
 				}
 			}
@@ -212,8 +287,8 @@ class App extends Component {
 		for(let i=0; i<chart.length; i++){
 			for(let j=0; j<chart[0].length; j++){
 				if(chart[i][j]!==0){
-					pts[count][0]=j-offsetX;
-					pts[count][1]=i-offsetY;
+					pts[count][0]=i-offsetX;
+					pts[count][1]=j-offsetY;
 					count++;
 				}
 			}
@@ -269,16 +344,22 @@ class App extends Component {
 	  	//what's the difference between these two ways of declaring a function???
 	  	//this.maxId will be undefined
 	    //check bubble quality
-	    bubble.id = this.state.maxId+1;
-	    bubble.active = true; 
-	    this.putBubble(bubble,0,0);
-	    //should update pos?
-	    this.setState({
-	      bubbles: this.state.bubbles.concat([bubble]),
-	      maxId: bubble.id,
-	      spaceWidth,
-	      spaceHeight,
-	    });
+	    let currentIds = this.state.bubbles.map(bubble => bubble.id);
+    	let idToBeAdded = 0;
+    	while (currentIds.includes(idToBeAdded)) {
+      		++idToBeAdded;
+   		}
+   		bubble.id = idToBeAdded;
+	    bubble.active = true;
+	    axios.post("/api/putData", bubble)
+		    .then(function (res) {
+		      if(res.data.success){
+		        socket.emit("addedToDB", bubble); 
+		      }else{
+		        console.log(res.data);
+		      }
+		    }); 
+		/* on addToClients*/
 	};
 
 	/**
@@ -286,20 +367,32 @@ class App extends Component {
 	*/
 	updateBubble = (bubble) => {
 	  	console.log("Update bubble id: "+bubble.id);
-	  	const bubbles = this.state.bubbles.slice();
-	  	let i=0;
-	  	for(; i<bubbles.length; i++){
-	  		if(bubbles[i].id === bubble.id){
-	  			bubbles[i]=bubble;
-	  			this.removeBubbleFromSpace(bubble.id); 
-	  			bubble.pos = this.putBubble(bubble, 0, 0);
-	  			break;
-	  		}
-	  	}
-	  	this.setState({
-	  		bubbles
-	  	});
+	  	axios.post("/api/updateData", bubble)
+	  	.then(function (res) {
+	      if(res.data.success){
+	        socket.emit("updatedDB", bubble); 
+	      }else{
+	        console.log(res.data);
+	      }
+	    });
+	    /* on updateClients
+	  	*/
 	};
+
+	deleteBubble = (id) => {
+	  	console.log("Delete bubble id: "+id);
+	  	axios.delete("/api/deleteData", {
+	      data: {id: id}
+	    }).then(function (res) {
+	      if(res.data.success){
+	        socket.emit("deletedInDB", id); 
+	      }else{
+	        console.log(res.data);
+	      }
+	    });
+	    /*on deleteInClients
+	  	*/
+  	};
 
 	//flag: enforced stupid duplicate in Bubble.js
 	/**
@@ -349,7 +442,7 @@ class App extends Component {
 		if(!placed){
 			this.updateSpaceDimensions(width, height+this.state.radiusOffset*3);
 			console.log("width:"+space.length+"; height:"+space[0].length);
-			this.putBubble(b, startX, startY);
+			return this.putBubble(b, startX, startY);
 		}
 		return xy;
 	}
@@ -370,6 +463,7 @@ class App extends Component {
 		//space[width][height]
 		let oldw = spaceWidth;
 		let oldh = spaceHeight;
+
 		if(width>=oldw && height>=oldh){
 			let padH = Array(height-oldh).fill(0);
 			//no bubble need to be relocated
@@ -384,31 +478,51 @@ class App extends Component {
 				let padW = Array(width-oldw).fill().map(() => Array(height).fill(0));
 				space = [...space, ...padW];
 			}
+			spaceWidth = space.length;
     	//this.setState({ spaceWidth: width, spaceHeight: height, space });
-    	spaceWidth = width;
-    	spaceHeight = height; 
-		}else{
-			if(width >= oldw && height < oldh){
-				// find area
-				let area = Array(oldw).fill().map(() => Array(oldh-height).fill(-1));
-				let affectedBubbleIDs = this.pointsOccupiedBy(this.readCoords(area, 0, 0), [0, oldh+1]); 
-				for (var i = 0; i < affectedBubbleIDs.length; i++) {
-					this.removeBubbleFromSpace(affectedBubbleIDs[i]);
-				}
-
-				if(width>oldw){
-					let padW = Array(width-oldw).fill().map(() => Array(height).fill(0));
-					space = [...space, ...padW];
-				}
-				for (var i = 0; i < affectedBubbleIDs.length; i++) {
-					this.putBubble(affectedBubbleIDs[i]);
+		}else if(width >= oldw && height < oldh){
+			let tempBubbles = this.state.bubbles.slice();
+			// find area
+			let area = Array(oldw).fill().map(() => Array(oldh-height).fill(-1));
+			let affectedBubbleIDs = this.pointsOccupiedBy(this.readCoords(area, 0, 0), [0, height-1]); 
+			for (let i = 0; i < affectedBubbleIDs.length; i++) {
+				this.removeBubbleFromSpace(affectedBubbleIDs[i]);
+			}
+			//cut away the array
+			let newSpace =  space.slice().map( function(row){ return row.slice(0, height); });
+			if(width>oldw){
+				let padW = Array(width-oldw).fill().map(() => Array(height).fill(0));
+				space = [...newSpace, ...padW];
+			}
+			spaceWidth = space.length;
+			for (let i = 0; i < tempBubbles.length; i++) {
+				if(affectedBubbleIDs.indexOf(tempBubbles[i].id)!==-1){
+					tempBubbles[i].pos = this.putBubble(tempBubbles[i],0,0);
 				}
 			}
-			// need to relocate bubbles...
+			this.setState({bubbles: tempBubbles});
+
+		}else if(width<oldw){
+			let tempBubbles = this.state.bubbles.slice();
+			// find area
+			let area = Array(oldw-width).fill().map(() => Array(oldh).fill(-1));
+			let affectedBubbleIDs = this.pointsOccupiedBy(this.readCoords(area, 0, 0), [width, 0]); 
+			for (let i = 0; i < affectedBubbleIDs.length; i++) {
+				this.removeBubbleFromSpace(affectedBubbleIDs[i]);
+			}
 			
-			//	and remove affected bubbles.
-			//	put bubbles into space
+			//cut away the array
+			space =  space.slice(0, width).map( function(row){ return row.slice(); });
+			spaceWidth = space.length;
+			for (let i = 0; i < tempBubbles.length; i++) {
+				if(affectedBubbleIDs.indexOf(tempBubbles[i].id)!==-1){
+					tempBubbles[i].pos = this.putBubble(tempBubbles[i],0,0);
+				}
+			}
+			this.setState({bubbles: tempBubbles});
 		}
+		
+    	spaceHeight = space[0].length; 
 	};
 
 	pointsAreOccupied = (pts,offset) => {
@@ -441,29 +555,13 @@ class App extends Component {
 					&& pt[1]+y >= 0 && pt[1]+y < spaceHeight) 
 					|| space[pt[0]+x][pt[1]+y]!== 0)){
 					let id = space[pt[0]+x][pt[1]+y];
-					if(affected.indxOf(id)==-1){
+					if(affected.indexOf(id)===-1){
 						affected.push(id);
 					}
 			}
 		}
 		return affected;
 	};
-
-  	deleteBubble = (id) => {
-	  	console.log("Delete bubble id: "+id);
-	  	var bubbles = this.state.bubbles.slice();
-	  	let i=0;
-	  	for(; i<bubbles.length; i++){
-	  		if(bubbles[i].id === id){
-	  			bubbles.splice(i, 1);
-	  			this.removeBubbleFromSpace(id); 
-	  			break;
-	  		}
-	  	}
-	  	this.setState({
-	  		bubbles
-	  	});
-  	};
 
   	saveList = () => {
   		window.localStorage.setItem("bubbleList", JSON.stringify(this.state.bubbles));
@@ -529,20 +627,25 @@ function printArray(arr){
 }
 
 function compareMoodCoord(a,b) {
-	if (((a.coord[0][0]+5)*11+(a.coord[0][1]+5)) < ((b.coord[0][0]+5)*11+(b.coord[0][1]+5))){
-	  	return -1;
-	} else if (((a.coord[0][0]+5)*11+(a.coord[0][1]+5)) > ((b.coord[0][0]+5)*11+(b.coord[0][1]+5))){
-	  	return 1;
+	if(a.coord[0]<b.coord[0]){
+		return -1;
+	}else if(a.coord[0]>b.coord[0]){
+		return 1;
+	}else{
+		if(a.coord[1]<b.coord[1]){
+			return -1;
+		}else if(a.coord[1]>b.coord[1]){
+			return 1;
+		}
 	}
 	return 0;
 }
 
 export default App;
-/*
-<header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <h1 className="App-title">Welcome to React</h1>
-        </header>
-        <p className="App-intro">
-          To get started, edit <code>src/App.js</code> and save to reload.
-        </p>*/
+/*<header className="App-header">
+  <img src={logo} className="App-logo" alt="logo" />
+  <h1 className="App-title">Welcome to React</h1>
+</header>
+<p className="App-intro">
+  To get started, edit <code>src/App.js</code> and save to reload.
+</p>*/
