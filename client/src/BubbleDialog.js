@@ -37,6 +37,8 @@ class BubbleDialog extends React.Component {
     	}
     }
 
+//https://stackoverflow.com/questions/34072009/update-nested-object-with-es6-computed-property-name
+  //why not be a bit radical just this time
     handleFormChange = name => event => {
     	this.setState({
 		    buffer: {
