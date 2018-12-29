@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import List, { ListItem, ListItemText } from 'material-ui/List';
 import { withStyles } from 'material-ui/styles';
 import BubbleDialog from './BubbleDialog';
+const moodPlaneParser = require('./moodPlaneParser');
 
 const styles = {
   root: {
@@ -46,7 +47,7 @@ class BubbleList extends React.Component {
         return ( //should map to bubble elements.
         <ListItem key={bubble.id} button>
           <ListItemText primary={':'+bubble.title} 
-          secondary={bubble.date+' ['+bubble.coord[0]+', '+bubble.coord[1]+']'} onClick={()=>this.handleFormOpen(bubble.id)}/>
+          secondary={bubble.date+' ['+moodPlaneParser[bubble.coord[0]+5][bubble.coord[1]+5]+']'} onClick={()=>this.handleFormOpen(bubble.id)}/>
           {//To clarify: if you initially pass undefined or null as the value prop, the component starts life as an "uncontrolled" component. 
           //Once you interact with the component, we set a value and react changes it to a "controlled" component, and issues the warning.
           }

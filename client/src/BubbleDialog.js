@@ -10,6 +10,7 @@ import Dialog, {
   DialogTitle,
   withMobileDialog,
 } from 'material-ui/Dialog';
+const moodPlaneParser = require('./moodPlaneParser');
 
 const styles = theme =>({
   textField: {
@@ -119,7 +120,7 @@ class BubbleDialog extends React.Component {
           <DialogTitle id="responsive-dialog-title">{title}</DialogTitle>
           <DialogContent>
             <DialogContentText>
-              {bubble.title}, [{bubble.coord[0]},{bubble.coord[1]}]<br/>
+              {bubble.title}, [{moodPlaneParser[bubble.coord[0]+5][bubble.coord[1]+5]}]<br/>
               {bubble.situation}
             </DialogContentText>
             <TextField
@@ -209,4 +210,4 @@ BubbleDialog.propTypes = {
 };
 //https://stackoverflow.com/questions/45704681/react-material-ui-export-multiple-higher-order-components
 BubbleDialog = withStyles(styles)(BubbleDialog);
-export default withMobileDialog()(BubbleDialog);
+export default withMobileDialog({breakpoint: '500px'})(BubbleDialog);

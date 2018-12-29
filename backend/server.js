@@ -3,18 +3,20 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const logger = require("morgan");
 const Bubble = require("./data");
-
-
+const env = 'development';
+const config = require('./config')[env];
+const clientURL = config.clientURL;
 const API_PORT = 3001;
 const app = express();
 const router = express.Router();
 const http = require('http').Server(app);
-const io = require('socket.io')(http, {origins:'localhost:3006'});
-io.origins('*:*');
+const io = require('socket.io')(http, {origins:clientURL});
+io.origins(clientURL);
+console.log("allowing connection from "+clientURL);
 //io.set('origins', 'http://localhost:3000' );
 
 // this is our MongoDB database
-const dbRoute = "mongodb://fullstack:fullstack_01@ds215172.mlab.com:15172/firstdb";
+const dbRoute = config.databaseLink;
 
 // connects our back end code with the database
 mongoose.connect(
@@ -36,7 +38,7 @@ app.use(bodyParser.json());
 app.use(logger("dev"));
 //might not be related to socket issues so may be deleted later
 app.use(function(req, res, next) {
-  res.header("Access-Control-Allow-Origin", "http://localhost:3006");
+  res.header("Access-Control-Allow-Origin", clientURL);
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   res.header("Access-Control-Allow-Credentials", true);
   next();

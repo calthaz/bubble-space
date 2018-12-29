@@ -7,9 +7,14 @@ import BubbleList from './BubbleList';
 import { createMuiTheme } from 'material-ui/styles';
 import globalVars from './Constants';
 import axios from "axios";
+
+const apiURL = "http://localhost:3001";
+//const apiURL = "http://ec2-34-208-42-160.us-west-2.compute.amazonaws.com:3001";
 const io = require('socket.io-client');
-const socket = io.connect('http://localhost:3001', { transport : ['websocket', 'xhr-polling'] }
+const socket = io.connect(apiURL, { transport : ['websocket', 'xhr-polling'] }
 );
+
+
 
 const theme = createMuiTheme({
   palette: {
@@ -53,7 +58,7 @@ class App extends Component {
 	        id: 1,
 	        coord:[1,1], 
 	        title: 'something happy and exciting',
-	        date: 'may 8, 2018',
+	        date: '2018-05-08',
 	        situation: 'just learned first half of the Fourier transform and started building this again.',
 	        thoughts: 'I should probably write a matlab demo about Fourier transform',
 	        feelings: 'excited, attempting???',
@@ -65,7 +70,7 @@ class App extends Component {
 	        id: 2,
 	        coord:[-3,-5], 
 	        title: 'sad sunny friday',
-	        date: 'may 4, Friday 2018',
+	        date: '2018-05-04',
 	        situation: 'German midterm, Vicky had to go home, awkward questions, went swimming, played piano with Jing, tried her dresses, looked good.',
 	        thoughts: 'No particular thoughts',
 	        feelings: 'sad, tired and wanna cry. i can actully cry without thinking about anything',
@@ -199,7 +204,7 @@ class App extends Component {
 		  			bubbles[i]=bubble;
 		  			that.removeBubbleFromSpace(bubble.id); 
 		  			bubble.pos = that.putBubble(bubble, 0, 0);
-		  			this.setState({spaceHeight, spaceWidth})
+		  			that.setState({spaceHeight, spaceWidth})
 		  			break;
 		  		}
 		  	}
@@ -232,13 +237,13 @@ class App extends Component {
 
 	synchronizeWithDB = () =>{
 		let that = this;
-		fetch("/api/getData") //proxy to localhost:3001/api/getData see server.js
+		fetch(apiURL+"/api/getData") //proxy to localhost:3001/api/getData see server.js
 	    .then(data => data.json())
 	    .then(function(res){
-	      	if (res.data == undefined || res.data.length === 0){ 
+	      	if (res.success && (res.data == undefined || res.data.length === 0)){ 
 	      		console.log("initialize data base");
 	      		for (var i = that.state.bubbles.length - 1; i >= 0; i--) {     			
-				    axios.post("/api/putData", that.state.bubbles[i])
+				    axios.post(apiURL+"/api/putData", that.state.bubbles[i])
 				    .then(function (res) {
 				      if(res.data.success){
 				        socket.emit("addedToDB",  that.state.bubbles[i]); 
@@ -359,7 +364,7 @@ class App extends Component {
    		}
    		bubble.id = idToBeAdded;
 	    bubble.active = true;
-	    axios.post("/api/putData", bubble)
+	    axios.post(apiURL+"/api/putData", bubble)
 		    .then(function (res) {
 		      if(res.data.success){
 		        socket.emit("addedToDB", bubble); 
@@ -375,7 +380,7 @@ class App extends Component {
 	*/
 	updateBubble = (bubble) => {
 	  	console.log("Update bubble id: "+bubble.id);
-	  	axios.post("/api/updateData", bubble)
+	  	axios.post(apiURL+"/api/updateData", bubble)
 	  	.then(function (res) {
 	      if(res.data.success){
 	        socket.emit("updatedDB", bubble); 
@@ -389,7 +394,7 @@ class App extends Component {
 
 	deleteBubble = (id) => {
 	  	console.log("Delete bubble id: "+id);
-	  	axios.delete("/api/deleteData", {
+	  	axios.delete(apiURL+"/api/deleteData", {
 	      data: {id: id}
 	    }).then(function (res) {
 	      if(res.data.success){
@@ -576,6 +581,10 @@ class App extends Component {
   		console.log("list saved");
   	}
 
+  	sortListByTime = () => {
+  		this.setState({bubbles: this.state.bubbles.sort(compareDate)});
+  	}
+
   	render() {
 	    return (
 	      	<div className="App">
@@ -590,6 +599,7 @@ class App extends Component {
 		        <Navigation 
 		          addBubble = {this.addBubble}
 		          saveList = {this.saveList}
+		          sortListByTime = {this.sortListByTime}
 		        />
 		        <BubbleList
 		          bubbles={this.state.bubbles} 
@@ -648,6 +658,15 @@ function compareMoodCoord(a,b) {
 		}
 	}
 	return 0;
+}
+
+/*ascending order*/
+function compareDate(a, b){
+	if(a.date === "" && b.date !== "") return -1;
+	if(b.date === "" && a.date !== "") return 1;
+	let d1 = new Date(a.date);
+	let d2 = new Date(b.date);
+	return (d1 > d2) - (d2 < d1);
 }
 
 export default App;

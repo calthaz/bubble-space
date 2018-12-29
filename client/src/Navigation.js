@@ -93,7 +93,7 @@ class Navigation extends React.Component {
             bubble = {newBubble}
         	/>
         <BottomNavigationAction disableRipple  label="View" value="favorites" icon={<FavoriteIcon />} />
-        <BottomNavigationAction disableRipple  label="Timeline" value="nearby" icon={<LocationOnIcon />} />
+        <BottomNavigationAction disableRipple onClick={this.props.sortListByTime} label="Timeline" value="nearby" icon={<LocationOnIcon />} />
         <BottomNavigationAction disableRipple onClick={this.props.saveList} label="Save" value="save" icon={<FolderIcon />} />    
 
       </BottomNavigation>
