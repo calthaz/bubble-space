@@ -13,6 +13,11 @@ const styles = {
     width: '100%',
     position: 'fixed',
     bottom: '0px',
+    "@media (max-width:500px)": {
+      top:'0px',
+      bottom:'initial',
+      zIndex: 100
+    }
   },
   textField: {
     //marginLeft: theme.spacing.unit,
@@ -88,7 +93,7 @@ class Navigation extends React.Component {
             bubble = {newBubble}
         	/>
         <BottomNavigationAction disableRipple  label="View" value="favorites" icon={<FavoriteIcon />} />
-        <BottomNavigationAction disableRipple  label="Nearby" value="nearby" icon={<LocationOnIcon />} />
+        <BottomNavigationAction disableRipple  label="Timeline" value="nearby" icon={<LocationOnIcon />} />
         <BottomNavigationAction disableRipple onClick={this.props.saveList} label="Save" value="save" icon={<FolderIcon />} />    
 
       </BottomNavigation>

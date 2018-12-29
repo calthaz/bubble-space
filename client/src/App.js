@@ -31,7 +31,11 @@ class App extends Component {
     super(props);
     //read list from database/local host
     //calculate lengths
-    this.state = {};
+    this.state = {
+    	showSpace: true,
+    	showList:true,
+    	connected:true
+    };
     if(window.localStorage.getItem("bubbleList")){
     	let temp = JSON.parse(window.localStorage.getItem("bubbleList"));
 		this.state.bubbles = temp.sort(compareMoodCoord);
@@ -155,15 +159,18 @@ class App extends Component {
 	  	//return; //todo 
 	  	let w = 0;
 	    if(window.innerWidth < 500) {
-	    	w = Math.floor(500/this.state.gridSize);        
+	    	this.setState({showSpace: false});
+	    	//w = Math.floor(500/this.state.gridSize);        
 	      //this.setState({ spaceWidth, spaceHeight});
 	    } else {
-	      w  = Math.round((window.innerWidth-10)/this.state.gridSize);
+	    	this.setState({showSpace: true});
+	      	w  = Math.round((window.innerWidth-300)/this.state.gridSize);
 	      //this.setState({ spaceWidth, spaceHeight });
+	      this.updateSpaceDimensions(w, spaceHeight);
+	      this.setState({ spaceWidth, spaceHeight});
+	      console.log("resize space to "+this.state.spaceWidth+", "+this.state.spaceWidth+" with gridSize "+this.state.gridSize);
 	    }
-	    this.updateSpaceDimensions(w, spaceHeight);
-	    this.setState({ spaceWidth, spaceHeight});
-	    console.log("resize space to "+this.state.spaceWidth+", "+this.state.spaceWidth+" with gridSize "+this.state.gridSize);
+	    
 	};
 
 	/**
@@ -192,6 +199,7 @@ class App extends Component {
 		  			bubbles[i]=bubble;
 		  			that.removeBubbleFromSpace(bubble.id); 
 		  			bubble.pos = that.putBubble(bubble, 0, 0);
+		  			this.setState({spaceHeight, spaceWidth})
 		  			break;
 		  		}
 		  	}
@@ -262,7 +270,7 @@ class App extends Component {
 			    	}
 			    	
 			    }
-			    that.setState({bubbles});
+			    that.setState({bubbles, spaceWidth, spaceHeight});
 	      	}
 	    }).catch(function(error) {
 	        console.log(error);
@@ -345,7 +353,7 @@ class App extends Component {
 	  	//this.maxId will be undefined
 	    //check bubble quality
 	    let currentIds = this.state.bubbles.map(bubble => bubble.id);
-    	let idToBeAdded = 0;
+    	let idToBeAdded = 1;
     	while (currentIds.includes(idToBeAdded)) {
       		++idToBeAdded;
    		}
@@ -571,14 +579,14 @@ class App extends Component {
   	render() {
 	    return (
 	      	<div className="App">
-		        <BubbleSpace 
+		        {this.state.showSpace && <BubbleSpace 
 		          bubbles={this.state.bubbles} 
 		          spaceWidth = {this.state.spaceWidth}
 		          spaceHeight = {this.state.spaceHeight}
 		          gridSize = {this.state.gridSize}
 		          radiusOffset = {this.state.radiusOffset}
 		          focusBubble = {this.focusBubble}
-		        />
+		        />}
 		        <Navigation 
 		          addBubble = {this.addBubble}
 		          saveList = {this.saveList}
@@ -587,6 +595,7 @@ class App extends Component {
 		          bubbles={this.state.bubbles} 
 		          bubbleStateUpdate = {this.handleBubbleStateUpdate}
 		          bubbleContentUpdate = {this.updateBubble}
+		          deleteBubbleFromList = {this.deleteBubble}
 		        />
 	      	</div>
     	);

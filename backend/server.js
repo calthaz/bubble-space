@@ -9,7 +9,7 @@ const API_PORT = 3001;
 const app = express();
 const router = express.Router();
 const http = require('http').Server(app);
-const io = require('socket.io')(http, {origins:'*:*'});
+const io = require('socket.io')(http, {origins:'localhost:3006'});
 io.origins('*:*');
 //io.set('origins', 'http://localhost:3000' );
 
@@ -36,7 +36,7 @@ app.use(bodyParser.json());
 app.use(logger("dev"));
 //might not be related to socket issues so may be deleted later
 app.use(function(req, res, next) {
-  res.header("Access-Control-Allow-Origin", "http://localhost:3000");
+  res.header("Access-Control-Allow-Origin", "http://localhost:3006");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   res.header("Access-Control-Allow-Credentials", true);
   next();

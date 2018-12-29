@@ -7,7 +7,7 @@ const styles = {
   root: {
     //width: '100%',
     //height: '890px',//todo calc(...)
-    backgroundColor: '#eeeeee',
+    backgroundColor: '#eeffee',
     //position: 'fixed',
     top: '0px',
     textAlign: 'initial',

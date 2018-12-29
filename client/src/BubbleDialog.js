@@ -76,17 +76,40 @@ class BubbleDialog extends React.Component {
 	  	}else if(value===this.props.actionName){
 	  		//check required fields
 	  		this.props.action(this.state.buffer);	  		
+	  	}else if(value===this.props.actionName2){
+	  		//check required fields
+	  		this.props.action2(this.state.buffer.id);	  		
 	  	}
 	    this.props.handleFormClose();
   	};
+
 
 	render() {
       const { fullScreen } = this.props;
       const { classes } = this.props; //bubble 
       const { formOpen } = this.props;//, handleFormClose, handleFormChange, handleFormCoordChange
-      const { title, actionName } = this.props;
+      const { title, actionName, actionName2 } = this.props;
       let bubble = this.state.buffer;
-      return (
+      let defaultDialogueActions = 
+      		(<DialogActions>
+      			<Button onClick={
+            	//https://stackoverflow.com/questions/48497358/reactjs-maximum-update-depth-exceeded-error/48497410
+              //that because you calling toggle inside the render method which will cause to re-render 
+              //and toggle will call again and re-rendering again and so on
+              //not onChange?
+            	()=>this.handleFormClose('cancel')
+            } color="primary">
+              Cancel
+            </Button>
+            {(actionName2!==undefined && actionName2 !== "") &&             
+            <Button onClick={() => this.handleFormClose(actionName2)} color="secondary" autoFocus>
+              {actionName2}
+            </Button>}
+            <Button onClick={() => this.handleFormClose(actionName)} color="primary" autoFocus>
+              {actionName}
+            </Button>
+            </DialogActions>);
+        return (
       	<Dialog
           fullScreen={fullScreen}
           open={formOpen}
@@ -172,20 +195,9 @@ class BubbleDialog extends React.Component {
 		          margin="normal"
 		        />
           </DialogContent>
-          <DialogActions>
-            <Button onClick={
-            	//https://stackoverflow.com/questions/48497358/reactjs-maximum-update-depth-exceeded-error/48497410
-              //that because you calling toggle inside the render method which will cause to re-render 
-              //and toggle will call again and re-rendering again and so on
-              //not onChange?
-            	()=>this.handleFormClose('cancel')
-            } color="primary">
-              Cancel
-            </Button>
-            <Button onClick={() => this.handleFormClose(actionName)} color="primary" autoFocus>
-              {actionName}
-            </Button>
-          </DialogActions>
+          
+          {defaultDialogueActions}
+
         </Dialog>
       );
     }  

@@ -13,7 +13,12 @@ const styles = {
     overflowY: 'auto',
     height: 'calc(100% - 65px)',
     width: '300px',
-    backgroundColor: 'whitesmoke'
+    backgroundColor: 'rgba(230,230,200, 0.7)',
+    "@media (max-width:500px)": {
+      position: 'relative',
+      width:"100%",
+      top: "56px"
+    }
   },
 };
 
@@ -52,7 +57,9 @@ class BubbleList extends React.Component {
             //handleFormCoordChange = {this.handleFormCoordChange}
             title = {'View/Edit Bubble'}
             actionName = {'update'}
+            actionName2 = {'delete'}
             action = {(bubble)=>this.props.bubbleContentUpdate(bubble)}
+            action2 = {(id)=>this.props.deleteBubbleFromList(id)}
             bubble = {bubble}
           />
         </ListItem>
