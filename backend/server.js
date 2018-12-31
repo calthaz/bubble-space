@@ -3,7 +3,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const logger = require("morgan");
 const Bubble = require("./data");
-const env = 'development';
+const env = 'ec2';
 const config = require('./config')[env];
 const clientURL = config.clientURL;
 const API_PORT = 3001;
@@ -39,6 +39,7 @@ app.use(logger("dev"));
 //might not be related to socket issues so may be deleted later
 app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Origin", clientURL);
+  res.header("Access-Control-Allow-Methods", "GET, PUT, POST, DELETE");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   res.header("Access-Control-Allow-Credentials", true);
   next();

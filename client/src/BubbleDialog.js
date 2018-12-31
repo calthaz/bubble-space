@@ -79,6 +79,7 @@ class BubbleDialog extends React.Component {
 	  		this.props.action(this.state.buffer);	  		
 	  	}else if(value===this.props.actionName2){
 	  		//check required fields
+	  		console.log("trying to delete: "+this.state.buffer.id)
 	  		this.props.action2(this.state.buffer.id);	  		
 	  	}
 	    this.props.handleFormClose();
