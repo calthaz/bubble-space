@@ -120,7 +120,7 @@ class BubbleDialog extends React.Component {
           <DialogTitle id="responsive-dialog-title">{title}</DialogTitle>
           <DialogContent>
             <DialogContentText>
-              {bubble.title}, [{moodPlaneParser[bubble.coord[0]+5][bubble.coord[1]+5]}]<br/>
+              {(bubble.title||"Untitled")}, [{moodPlaneParser[bubble.coord[0]+5][bubble.coord[1]+5]}]<br/>
               {bubble.situation}
             </DialogContentText>
             <TextField

@@ -46,7 +46,7 @@ class BubbleList extends React.Component {
     const bubbleDivs = bubbles.map((bubble, index) => {
         return ( //should map to bubble elements.
         <ListItem key={bubble.id} button>
-          <ListItemText primary={':'+bubble.title} 
+          <ListItemText primary={'- '+(bubble.title||"Untitled")} 
           secondary={bubble.date+' ['+moodPlaneParser[bubble.coord[0]+5][bubble.coord[1]+5]+']'} onClick={()=>this.handleFormOpen(bubble.id)}/>
           {//To clarify: if you initially pass undefined or null as the value prop, the component starts life as an "uncontrolled" component. 
           //Once you interact with the component, we set a value and react changes it to a "controlled" component, and issues the warning.
