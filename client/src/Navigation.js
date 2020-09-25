@@ -81,8 +81,10 @@ class Navigation extends React.Component {
 
     return (
     	//this spread doesn't work?https://material-ui-next.com/guides/api/#spread
-      <BottomNavigation disableRipple value={navValue} onChange={this.handleNavButtomChange} className={classes.root}>
-        <BottomNavigationAction disableRipple onClick={this.handleAddFormOpen} label="Add" value="add" icon={<AddIcon />} />
+      <BottomNavigation disableRipple value={navValue} 
+              onChange={this.handleNavButtomChange}   className={classes.root}>
+        <BottomNavigationAction disableRipple onClick={this.handleAddFormOpen} 
+            label="Add" value="add" icon={<AddIcon />} />
         	<BubbleDialog 
         		formOpen = {this.state.addFormOpen}
         		handleFormClose = {this.handleAddFormClose}
@@ -92,7 +94,7 @@ class Navigation extends React.Component {
             actionName = {'add'}
             bubble = {newBubble}
         	/>
-        <BottomNavigationAction disableRipple  label="View" value="favorites" icon={<FavoriteIcon />} />
+        <BottomNavigationAction disableRipple onClick={this.props.physicsAction} label="View" value="favorites" icon={<FavoriteIcon />} />
         <BottomNavigationAction disableRipple onClick={this.props.sortListByTime} label="Timeline" value="nearby" icon={<LocationOnIcon />} />
         <BottomNavigationAction disableRipple onClick={this.props.saveList} label="Save" value="save" icon={<FolderIcon />} />    
 

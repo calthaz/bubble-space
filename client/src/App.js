@@ -2,11 +2,21 @@ import React, { Component } from 'react';
 import logo from './logo.svg';
 import './App.css';
 import Navigation from './Navigation';
+import HeaderBar from './HeaderBar';
 import BubbleSpace from './BubbleSpace';
 import BubbleList from './BubbleList';
-import { createMuiTheme } from 'material-ui/styles';
 import globalVars from './Constants';
 import axios from "axios";
+import BubbleMap from './BubbleMap';
+
+import Fab from '@material-ui/core/Fab'
+
+import { createMuiTheme } from '@material-ui/core/styles';
+import purple from '@material-ui/core/colors/purple';
+import { ThemeProvider } from '@material-ui/styles';
+
+
+const spreadsheet = require("./bubble-spreadsheet.json")
 
 const apiURL = "http://localhost:3001";
 //const apiURL = "http://ec2-34-208-42-160.us-west-2.compute.amazonaws.com:3001";
@@ -15,14 +25,15 @@ const socket = io.connect(apiURL, { transport : ['websocket', 'xhr-polling'] }
 );
 
 
-
 const theme = createMuiTheme({
   palette: {
-    type: 'dark',
+    primary: {
+      main: purple[500],
+    },
+    secondary: {
+      main: '#d500f9',
+    },
   },
-  spacing: {
-  	unit: '3px',
-  }
 });
 
 //buffer zone--------------------
@@ -41,45 +52,7 @@ class App extends Component {
     	showList:true,
     	connected:true
     };
-    if(window.localStorage.getItem("bubbleList")){
-    	let temp = JSON.parse(window.localStorage.getItem("bubbleList"));
-		this.state.bubbles = temp.sort(compareMoodCoord);
-		this.state.maxId = this.state.bubbles.length; 
-		/*for (var i = 0; i < temp.length; i++) {
-			let n = parseInt(temp[i].id);
-			if(!isNaN(n) && n> this.state.maxID){
-				this.state.maxId = n;
-			}
-		}*/
-		console.log("Has a list");
-		console.log("maxId: "+ this.state.maxId);
-	}else{
-		this.state.bubbles = [{
-	        id: 1,
-	        coord:[1,1], 
-	        title: 'something happy and exciting',
-	        date: '2018-05-08',
-	        situation: 'just learned first half of the Fourier transform and started building this again.',
-	        thoughts: 'I should probably write a matlab demo about Fourier transform',
-	        feelings: 'excited, attempting???',
-	        tags: ['coding', 'math'],
-	        active: true,
-	        pos: [],
-	      },
-	      {
-	        id: 2,
-	        coord:[-3,-5], 
-	        title: 'sad sunny friday',
-	        date: '2018-05-04',
-	        situation: 'German midterm, Vicky had to go home, awkward questions, went swimming, played piano with Jing, tried her dresses, looked good.',
-	        thoughts: 'No particular thoughts',
-	        feelings: 'sad, tired and wanna cry. i can actully cry without thinking about anything',
-	        tags: ['tired', 'cry'],
-	        active: true,
-	        pos:[],
-	      }];
-	  this.state.maxId = 2;
-	}
+
     //that = undefined;
     //let arr = Array(rows).fill().map(() => Array(columns).fill(0));
   	space = Array(spaceHeight).fill().map(() => Array(spaceWidth).fill(0));
@@ -129,12 +102,12 @@ class App extends Component {
 					if(shadow[j][i]===1 && ((i+move[0]>2*r||i+move[0]<0)
 							||(j+move[1]>2*r||j+move[1]<0)
 							||(shadow[j+move[1]][i+move[0]]===0))){
-						cover[j][i]=1;
+						cover[i][j]=1;//Why i j here??
 					}
 					if(shadow[j][i]===1 && ((i-move[0]>2*r||i-move[0]<0)
 						||(j-move[1]>2*r||j-move[1]<0)
 						||(shadow[j-move[1]][i-move[0]]===0))){
-						release[j][i]=-1;
+						release[i][j]=-1;//why i j here??
 					}
 				}
 			}
@@ -154,7 +127,8 @@ class App extends Component {
     //Instead, assign to `this.state` directly or define a `state = {};` class property with the desired state in the App component.
     this.state.spaceWidth=spaceWidth;
     this.state.spaceHeight=spaceHeight;
-    this.synchronizeWithDB();
+	this.synchronizeWithDBandLS();
+	this.state.animationHandle = null;
   };
 	//https://www.hawatel.com/blog/handle-window-resize-in-react/
 	/**
@@ -186,12 +160,13 @@ class App extends Component {
 	    window.addEventListener("resize", this.updateDimensionsAsWindowResizes);
 	    let that = this;
 	    socket.on("addToClients", function(bubble){
+			console.log("[socket.on] addToClients", bubble)
 	    	let pos = that.putBubble(bubble, 0, 0);
 			bubble.pos=pos; 			
 	    	//should update pos?
 	    	that.setState({
 	      		bubbles: that.state.bubbles.concat([bubble]),
-	      		maxId: bubble.id,
+	      		//maxId: bubble.id,
 	      		spaceWidth,
 	      		spaceHeight,
 	    	});
@@ -235,52 +210,155 @@ class App extends Component {
 	    window.removeEventListener("resize", this.updateDimensionsAsWindowResizes);
 	};
 
-	synchronizeWithDB = () =>{
-		let that = this;
-		fetch(apiURL+"/api/getData") //proxy to localhost:3001/api/getData see server.js
-	    .then(data => data.json())
-	    .then(function(res){
-	      	if (res.success && (res.data == undefined || res.data.length === 0)){ 
-	      		console.log("initialize data base");
-	      		for (var i = that.state.bubbles.length - 1; i >= 0; i--) {     			
-				    axios.post(apiURL+"/api/putData", that.state.bubbles[i])
-				    .then(function (res) {
-				      if(res.data.success){
-				        socket.emit("addedToDB",  that.state.bubbles[i]); 
-				      }else{
-				      	console.log(res.data);
-				      }
-				    });
-	      		}
-	      	}else{
-	      		console.log("Pulling bubbles from DB");
-				const bubbles = res.data;
-				    //----------put bubbles----------------------
-			    let lastX = 0;
-			    let lastY = 0;
-			    
-			    console.log(bubbles.length);
-			    for (let i = 0; i < bubbles.length; i++) {
-			    	if(bubbles[i].active){
-			    		let pos = that.putBubble(bubbles[i], lastX, lastY);
-			  			if(pos[0]>0){
-							//lastX = Math.min(this.state.spaceWidth, pos[0]+4);
-							//lastY = Math.min(this.state.spaceHeight, pos[1]+4);
-							bubbles[i].pos=pos; 
-							lastX = pos[0];
-							lastY = pos[1];
-							//if(i%10===0)
-								//console.log("Put bubble at "+pos[0]+", "+pos[1]+" with gridSize "+this.state.gridSize);
+	synchronizeWithDBandLS = () =>{
+		let tempBubbles = []
+		/*[{
+			id: 1,
+			coord:[1,1], 
+			title: 'something happy and exciting',
+			date: '2018-05-08',
+			situation: 'just learned first half of the Fourier transform and started building this again.',
+			thoughts: 'I should probably write a matlab demo about Fourier transform',
+			feelings: 'excited, attempting???',
+			tags: ['coding', 'math'],
+			active: true,
+			pos: [],
+		  },
+		  {
+			id: 2,
+			coord:[-3,-5], 
+			title: 'sad sunny friday',
+			date: '2018-05-04',
+			situation: 'German midterm, Vicky had to go home, awkward questions, went swimming, played piano with Jing, tried her dresses, looked good.',
+			thoughts: 'No particular thoughts',
+			feelings: 'sad, tired and wanna cry. i can actully cry without thinking about anything',
+			tags: ['tired', 'cry'],
+			active: true,
+			pos:[],
+		  }]; //temporary */
+		
+		
+		if(window.localStorage.getItem("bubbleList")){
+			let temp = JSON.parse(window.localStorage.getItem("bubbleList"));
+			console.log("Has a list");
+			//this.state.bubbles = temp.sort(compareMoodCoord);
+			fetch(apiURL+"/api/getData") //proxy to localhost:3001/api/getData see server.js
+				.then(data => data.json())
+				.then((res)=>{
+					if(res.success && (res.data == undefined || res.data.length === 0)){ 
+						//db is empty
+						console.log("ls not empty, db empty");
+						//this.state.bubbles = temp.sort(compareMoodCoord);
+						for (var i = temp.length - 1; i >= 0; i--) {   
+							let curr=i;  			
+							axios.post(apiURL+"/api/putData", temp[i])
+							.then((res)=>{
+								if(res.data.success){
+									console.log("before emitting addedToDB", temp[curr])//i=-1
+									socket.emit("addedToDB",  temp[curr]); 
+								}else{
+									console.log("/putData error after successful connection", res.data);
+								}
+							});
 						}
-			    	}
-			    	
-			    }
-			    that.setState({bubbles, spaceWidth, spaceHeight});
-	      	}
-	    }).catch(function(error) {
-	        console.log(error);
-	        console.log("No Connection");
-	    });
+					}else if(res.error){
+						//db is not accessible
+						alert("ls not empty, db is not accessible at init.")
+						tempBubbles = temp.sort(compareMoodCoord);
+						
+						for (let i = 0; i < tempBubbles.length; i++) {
+							tempBubbles[i].pos = this.putBubble(tempBubbles[i],0,0);	
+						}
+						
+						this.setState({bubbles: tempBubbles})
+					}else if(res.data.length > 0){
+						//db is not empty
+						console.log("ls not empty, db not empty")
+						tempBubbles = res.data;				
+						for (let i = 0; i < tempBubbles.length; i++) {
+							tempBubbles[i].pos = this.putBubble(tempBubbles[i],0,0);	
+						}
+						this.setState({bubbles: tempBubbles})
+						window.localStorage.setItem("bubbleList", JSON.stringify(this.state.bubbles));
+  						console.log("list saved");
+					}else{
+						alert("edge case in ls not empty")
+					}
+				}).catch((error)=>{
+					alert("ls not empty, db is not accessible at init.", error)
+					console.log(temp)
+					tempBubbles = temp.sort(compareMoodCoord);
+					for (let i = 0; i < tempBubbles.length; i++) {
+						tempBubbles[i].pos = this.putBubble(tempBubbles[i],0,0);	
+					}
+					this.setState({bubbles: tempBubbles})
+				});
+		}else{//localStorage is empty
+			fetch(apiURL+"/api/getData") //proxy to localhost:3001/api/getData see server.js
+				.then(data => data.json())
+				.then((res)=>{
+					if(res.success && (res.data == undefined || res.data.length === 0)){ 
+						//db is empty
+						console.log("ls empty, db empty");
+						let temp = spreadsheet
+						window.localStorage.setItem("bubbleList", JSON.stringify(temp));
+						for (var i = temp.length - 1; i >= 0; i--) {   
+							let curr=i;  			
+							axios.post(apiURL+"/api/putData", temp[i])
+							.then((res)=>{
+								if(res.data.success){
+									console.log("before emitting addedToDB", temp[curr])//i=-1
+									socket.emit("addedToDB",  temp[curr]); 
+								}else{
+									console.log("/putData error after successful connection", res.data);
+								}
+							});
+						}
+					}else if(res.error){
+						//db is not accessible
+						alert("ls empty, db is not accessible at init.", res.error)
+						let temp = spreadsheet
+						console.log(temp)
+						tempBubbles = temp.sort(compareMoodCoord);
+						for (let i = 0; i < tempBubbles.length; i++) {
+							tempBubbles[i].pos = this.putBubble(tempBubbles[i],0,0);	
+						}
+						this.setState({bubbles: tempBubbles})
+						window.localStorage.setItem("bubbleList", JSON.stringify(temp));
+					}else if(res.data.length > 0){
+						//db is not empty
+						tempBubbles = res.data;
+						for (let i = 0; i < tempBubbles.length; i++) {
+							tempBubbles[i].pos = this.putBubble(tempBubbles[i],0,0);	
+						}
+						this.setState({bubbles: tempBubbles})
+						window.localStorage.setItem("bubbleList", JSON.stringify(this.state.bubbles));
+  						console.log("list from db saved");
+					}else{
+						alert("edge case in ls empty")
+					}
+				}).catch((error)=>{
+					alert("ls empty, db is not accessible at init.", error)
+					let temp = spreadsheet
+					console.log(temp)
+					tempBubbles = temp.sort(compareMoodCoord);
+					
+					for (let i = 0; i < tempBubbles.length; i++) {
+						tempBubbles[i].pos = this.putBubble(tempBubbles[i],0,0);	
+					}
+					
+					this.setState({bubbles: tempBubbles})
+					window.localStorage.setItem("bubbleList", JSON.stringify(temp));
+				});
+		}
+			/**/
+			//this.state.maxId = 36;
+		
+		for (let i = 0; i < tempBubbles.length; i++) {
+			tempBubbles[i].pos = this.putBubble(tempBubbles[i],0,0);	
+		}
+		
+		this.state.bubbles=tempBubbles;
 	}
 
   	/*
@@ -357,11 +435,11 @@ class App extends Component {
 	  	//what's the difference between these two ways of declaring a function???
 	  	//this.maxId will be undefined
 	    //check bubble quality
-	    let currentIds = this.state.bubbles.map(bubble => bubble.id);
-    	let idToBeAdded = 1;
-    	while (currentIds.includes(idToBeAdded)) {
-      		++idToBeAdded;
-   		}
+	    //let currentIds = this.state.bubbles.map(bubble => bubble.id);
+    	let idToBeAdded =Math.floor(Math.random()*360)//.toString(36).slice(2)
+    	//while (currentIds.includes(idToBeAdded)) {
+      	//	++idToBeAdded;
+   		//}
    		bubble.id = idToBeAdded;
 	    bubble.active = true;
 	    axios.post(apiURL+"/api/putData", bubble)
@@ -538,6 +616,10 @@ class App extends Component {
     	spaceHeight = space[0].length; 
 	};
 
+
+	/**
+	 * test if pts in space are nonzero
+	 */
 	pointsAreOccupied = (pts,offset) => {
 		let x = offset[0];
 		let y = offset[1];
@@ -556,6 +638,9 @@ class App extends Component {
 		return false;
 	};
 
+	/**
+	 * get bubble ids that occupies the points
+	 */
   	pointsOccupiedBy = (pts,offset) => {
 		let x = offset[0];
 		let y = offset[1];
@@ -575,18 +660,85 @@ class App extends Component {
 		}
 		return affected;
 	};
+	
+	/**
+	 * set covered points to be zero
+	 */
+	release=(pts, offset)=> {
+		let x = offset[0];
+		let y = offset[1];
+		for(let pt of pts ){
+			space[pt[0]+x][pt[1]+y]=0;
+		}
+	}
 
-  	saveList = () => {
-  		window.localStorage.setItem("bubbleList", JSON.stringify(this.state.bubbles));
-  		console.log("list saved");
-  	}
+	/**
+	 * cover space with id
+	 */
+	cover=(pts, offset,id) => {
+		let x = offset[0];
+		let y = offset[1];
+		for(let pt of pts ){
+			space[pt[0]+x][pt[1]+y]=id;
+		}
+	}
 
-  	sortListByTime = () => {
-  		this.setState({bubbles: this.state.bubbles.sort(compareDate)});
-  	}
 
+	/**
+	 * one step in moving those bubbles upwords
+	 * 
+	 */
+	startPhysics = ()=> {
+		console.log("physics");
+		let bubbleList = shuffle(this.state.bubbles);
+		for(let b of bubbleList){
+			for(let i=0; i<=4; i++){//only moves towards the top
+				let move = this.state.MOVES[i];
+				if(!this.pointsAreOccupied(
+					this.state.moveCover[this.calculateRadius(b.coord)+1][i], b.pos)){
+					console.log("pointsnotoccupied", b);
+					console.log(
+							"Moved it with move: ("+move[0]+", "+move[1]+")");
+					this.release(this.state.moveRelease[this.calculateRadius(b.coord)+1][i], b.pos);
+					this.cover(this.state.moveCover[this.calculateRadius(b.coord)+1][i], b.pos, b.id);
+					b.pos[0] = b.pos[0]+move[0];
+					b.pos[1] = b.pos[1]+move[1];
+					break;
+				}
+			}
+		}
+		this.setState({bubbles: bubbleList})
+	}
+
+	animate = ()=>{
+		this.state.animationHandle = requestAnimationFrame(this.animate)
+		this.startPhysics()
+	}
+
+	toggleAnimation =()=>{
+		console.log("toggleAnimation")
+		if(!this.state.animationHandle){
+			console.log("start animation")
+			this.animate()
+		}else{
+			console.log("end animation")
+			cancelAnimationFrame(this.state.animationHandle)
+			this.state.animationHandle=null
+		}
+	}
+
+
+	saveList = () => {
+		window.localStorage.setItem("bubbleList", JSON.stringify(this.state.bubbles));
+		console.log("list saved");
+	}
+
+	sortListByTime = () => {
+		this.setState({bubbles: this.state.bubbles.sort(compareDate)});
+  }
   	render() {
 	    return (
+			<ThemeProvider theme={theme}>
 	      	<div className="App">
 		        {this.state.showSpace && <BubbleSpace 
 		          bubbles={this.state.bubbles} 
@@ -596,10 +748,12 @@ class App extends Component {
 		          radiusOffset = {this.state.radiusOffset}
 		          focusBubble = {this.focusBubble}
 		        />}
+				<HeaderBar/>
 		        <Navigation 
 		          addBubble = {this.addBubble}
 		          saveList = {this.saveList}
-		          sortListByTime = {this.sortListByTime}
+				  sortListByTime = {this.sortListByTime}
+				  physicsAction = {this.toggleAnimation}
 		        />
 		        <BubbleList
 		          bubbles={this.state.bubbles} 
@@ -607,7 +761,9 @@ class App extends Component {
 		          bubbleContentUpdate = {this.updateBubble}
 		          deleteBubbleFromList = {this.deleteBubble}
 		        />
+				<BubbleMap/>
 	      	</div>
+			</ThemeProvider>
     	);
   	}
 }

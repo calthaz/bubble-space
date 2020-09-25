@@ -1,9 +1,10 @@
 const mongoose = require("mongoose");
+//const {MongoClient} = require('mongodb');
 const express = require("express");
 const bodyParser = require("body-parser");
 const logger = require("morgan");
 const Bubble = require("./data");
-const env = 'ec2';
+const env = 'development';
 const config = require('./config')[env];
 const clientURL = config.clientURL;
 const API_PORT = 3001;
@@ -17,6 +18,8 @@ console.log("allowing connection from "+clientURL);
 
 // this is our MongoDB database
 const dbRoute = config.databaseLink;
+console.log(dbRoute)
+//const client = new MongoClient(dbRoute, { useNewUrlParser: true, useUnifiedTopology: true })
 
 // connects our back end code with the database
 mongoose.connect(
@@ -108,6 +111,7 @@ router.delete("/deleteData", (req, res) => {
 // this method adds new data in our database
 router.post("/putData", (req, res) => {
   let bubble = new Bubble();
+  console.log(req.body);
 
   const { id, coord } = req.body;
 
@@ -130,6 +134,7 @@ router.post("/putData", (req, res) => {
     if (err) return res.json({ success: false, error: err });
     return res.json({ success: true });
   });
+
 });
 
 // append /api for our http requests
@@ -146,9 +151,11 @@ io.on('connection', function(socket){
     console.log('user disconnected');
   });
   socket.on('addedToDB', (bubble)=>{
+    console.log("[socket.on] addedToDB", bubble);
     io.emit('addToClients', bubble);
   });
   socket.on('updatedDB', (bubble)=>{
+    console.log("updatedDB", bubble)
     io.emit('updateClients', bubble);
   });
   socket.on('deletedInDB', (id)=>{

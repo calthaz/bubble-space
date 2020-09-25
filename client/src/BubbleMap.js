@@ -6,33 +6,33 @@ import Button from 'material-ui/Button';
 const styles = theme => ({
   root: {
     margin:'5px',
-    display:'inline-block',
     position: 'absolute',
   },
+  row:{
+      display: 'flex',
+      flexDirection: 'row'
+  },
+
   btn: {
-  	width: '50px',
+  	width: '90px',
     height: '50px',//todo calc(...)
-		minWidth: 'initial',
+	minWidth: 'initial',
    // background: 'linear-gradient(60deg, rgba(242, 255, 38, 0.5), rgba(224, 251, 0, 0.5)), '+
                 //'linear-gradient(60deg, rgba(38, 195, 255, 0.5), rgba(0, 205, 251, 0.5))',
     backgroundBlendMode: 'multiply',
-    borderRadius: '50%',
+    //borderRadius: '50%',
     
     //top: '0px',
     boxShadow: '0 4px 20px 0px rgba(0, 0, 0, 0.12)',
   }
 });
 
-class Bubble extends React.Component {
+class BubbleMap extends React.Component {
 
-  state = {
-    formOpen: false,
-    //tempBubble:this.props.bubble,//??? copy this?
-  };
 
-  constructBackground = () => {
-  	let pleasure = this.props.bubble.coord[0]/5;
-  	let arousal = this.props.bubble.coord[1]/5;
+  constructBackground = (p, a) => {
+  	let pleasure = p/5;
+  	let arousal = a/5;
   	let bg = `linear-gradient(60deg, rgba(242, 255, 38, ${Math.max(0, pleasure)}), `
   	         +`rgba(224, 251, 0, ${Math.max(0, pleasure)})), `
              +`linear-gradient(240deg, rgba(38, 115, 255, ${Math.max(0, -pleasure)}), `
@@ -45,40 +45,46 @@ class Bubble extends React.Component {
   };
 
 //flag: enforced stupid duplicate in App.js
-  calculateRadius = () => {
-  	const { bubble } = this.props;
+  calculateRadius = (p, a) => {
   	 //var SIZES = [0,1,2,3,4,5,6];
-  	let r = (Math.abs(bubble.coord[0])+Math.abs(bubble.coord[1]));
+  	let r = (Math.abs(p)+Math.abs(a));
     return r===0 ? 0 : (Math.floor((r-1)/2)); 
     //return 3; //some category 
   };
 
   render(){
-  	const { classes, grds, bubble, radiusOffset } = this.props;
-  	//console.log(radiusOffset);
-  	let r = Math.floor((this.calculateRadius()+radiusOffset)*grds);//
-  	return (
-  		<div className={classes.root} style={{top: (bubble.pos[1]*grds)-r,
-        left: (bubble.pos[0]*grds)-r,
-        zIndex: (bubble.id)
-      }}>
-      <Button onClick={()=>this.props.focusBubble(bubble.id)} className={classes.btn} style={{
-      	background:this.constructBackground(),
-      	width:(r*2.5) +'px',
-      	height:(r*2.5) +'px',
-      	//top: bubble.pos[1]*grds,
-      	//left: bubble.pos[0]*grds,
-      }}>
-        {''}
-	    </Button>
+    const { classes } = this.props;
+      //console.log(radiusOffset);
+    
+    let bubbleDivs=[]
+    for (let a = 5; a>=-5; a--){
+        let bubbles = []
+        for (let p = -5; p<=5; p++){
+            bubbles.push(<div className={classes.btn} 
+            style={{
+               background:this.constructBackground(p, a),
+               //width:(r*2.5) +'px',
+               //height:(r*2.5) +'px',
+               //top: bubble.pos[1]*grds,
+               //left: bubble.pos[0]*grds,
+               }}
+           >
+           {this.calculateRadius(p, a)}, {p}, {a}
+           </div>);
+        }
+    bubbleDivs.push(<div className={classes.row}>{bubbles}</div>)
+    }
 
-	    </div>
-    );
+    return (
+        <div className={classes.root}>
+          {bubbleDivs}
+        </div>
+      );
   }
 }
 
-Bubble.propTypes = {
+BubbleMap.propTypes = {
   classes: PropTypes.object.isRequired, //to support withStyles
 };
 
-export default withStyles(styles)(Bubble);	
+export default withStyles(styles)(BubbleMap);	

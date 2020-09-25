@@ -37,6 +37,7 @@ class BubbleSpace extends React.Component {
     const spw = this.props.spaceWidth;
     const sph = this.props.spaceHeight;
     const grds = this.props.gridSize;
+    
     const bubbleDivs = bubbles.filter(bubble => (bubble.active && bubble.pos)).map((bubble, index) => {
       //if(bubble.active){
         return ( //should map to bubble elements.
