@@ -19,4 +19,14 @@ let calculateRadius = (bubble) => {
   //return 3; //some category 
 };
 
-export {constructBackground, calculateRadius}
+let emptyBubble = {
+  coord:[0,0], 
+  title: '',
+  date: '',
+  situation: '',
+  thoughts: '',
+  feelings: '',
+  tags: [],
+};
+
+export {constructBackground, calculateRadius, emptyBubble}

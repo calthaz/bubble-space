@@ -11,7 +11,7 @@
 
       <v-spacer></v-spacer>
       
-      <v-btn icon>
+      <v-btn icon @click='handleAddFormOpen'>
         <v-icon>mdi-plus</v-icon>
       </v-btn>
       
@@ -32,28 +32,46 @@
     </v-app-bar>
 
     <v-main>
-      
-      <BubbleSpace v-if='showSpace' />
-      <!--<v-if='showList' BubbleList/>-->
+      <BubbleSpace v-if='showSpace' :show-list="showList"/>
+      <BubbleList v-if='showList' @update-bubble="openUpdateBubbleDialog"/>
+      <BubbleDialog :dialog="showAddDialog" :bubble='emptyBubble'
+        :handleSuperFormClose='handleAddFormClose'
+        :action='addBubbleFromDialog'
+        :actionName="'Add'"
+        :title="'Blow you mood bubble'" />
+      <BubbleDialog :dialog="showUpdateDialog" :bubble='bubbleToBeUpdated'
+        :handleSuperFormClose='handleUpdateFormClose'
+        :action='updateBubbleFromDialog'
+        :actionName="'Update'"
+        :action2='deleteBubbleFromDialog'
+        :actionName2="'Delete'"
+        :title="'Update or delete bubble'" />
     </v-main>
   </v-app>
 </template>
 
 <script>
 import BubbleSpace from './components/BubbleSpace';
-//import BubbleList from './components/BubbleList';
+import BubbleList from './components/BubbleList';
+import BubbleDialog from './components/BubbleDialog';
+import {emptyBubble} from '@/bubble/bubbleHelper'
 
 export default {
   name: 'App',
 
   components: {
     BubbleSpace,
-    //BubbleList
+    BubbleList,
+    BubbleDialog,
   },
 
   data: () => ({
     showList: true,
-    showSpace: true
+    showSpace: true,
+    showAddDialog: false,
+    showUpdateDialog: false,
+    emptyBubble: emptyBubble,
+    bubbleToBeUpdated: emptyBubble
   }),
   
   mounted(){
@@ -65,6 +83,32 @@ export default {
     } else {
         this.showSpace = true;
     }
+  },
+  methods:{
+      handleAddFormOpen: function(event){
+        this.showAddDialog=true;
+        this.showUpdateDialog=false;
+      },
+
+      handleAddFormClose: function(value){
+        this.showAddDialog=false;
+        this.showUpdateDialog=false;
+      },
+      handleUpdateFormClose(){
+        this.showAddDialog=false;
+        this.showUpdateDialog=false;
+      },
+
+      addBubbleFromDialog: function(bubble){
+        this.$store.dispatch('addBubble', bubble)
+      },
+
+      openUpdateBubbleDialog(bubble){
+        this.bubbleToBeUpdated = bubble;
+        this.showAddDialog=false;
+        this.showUpdateDialog=true;
+      }
   }
+
 };
 </script>

@@ -13,9 +13,11 @@ export default {
         Bubble
 
     },
+    props: {
+        showList:{required: true},
+    },
     computed: {
         ...mapState(['bubbles', 'spaceWidth', 'spaceHeight', 'gridSize']),
-
     },
     methods: {
         ...mapActions(['addBubbleToSpace', 'updateBubbleInSpace']),
@@ -24,6 +26,8 @@ export default {
             //return; //todo 
             console.log("updateDimensionsAsWindowResizes");
             let w = Math.round((window.innerWidth)/self.gridSize);
+            if(self.showList)
+                w = Math.round((window.innerWidth-300)/self.gridSize);
             //this.setState({ spaceWidth, spaceHeight });
             self.updateSpaceDimensions({width: w, height: self.spaceHeight});
             //

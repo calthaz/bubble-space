@@ -58,17 +58,17 @@ export default new Vuex.Store({
       }] 
   },
   mutations: {
-    setBubbles:(state, bubbles)=>{
+    setBubbles(state, bubbles){
       console.log("commit, set bubbles")
       state.bubbles = bubbles
     },
 
-    addBubbleToState:(state, bubble)=>{
+    addBubbleToState(state, bubble){
       console.log("commit, add bubble to state")
       state.bubbles = state.bubbles.concat([bubble]);
     },
 
-    deleteBubbleInSpace:(state, id)=>{
+    deleteBubbleInSpace(state, id){
       //var bubbles = that.state.bubbles.slice();
       let i=0;
       for(; i<state.bubbles.length; i++){
@@ -80,7 +80,7 @@ export default new Vuex.Store({
       }
     },
 
-    updateBubble: (state, bubble)=>{
+    updateBubble (state, bubble){
       const bubbles = state.bubbles.slice();
       let i=0;
       for(; i<bubbles.length; i++){
@@ -92,7 +92,7 @@ export default new Vuex.Store({
       }
     },
 
-    putBubble:(state, payload)=>{
+    putBubble(state, payload){
       let bubble=payload.bubble
       let startX=payload.startX
       let startY=payload.startY
@@ -121,7 +121,7 @@ export default new Vuex.Store({
         console.log('add bubble first before placement')
       }
     },
-    updateSpaceDimensions:(state, payload)=>{
+    updateSpaceDimensions(state, payload){
       let w = payload.width;
       let h = payload.height;
       let res = spaceOrganizer.updateSpaceDimensions(state.bubbles, w, h);
@@ -130,16 +130,21 @@ export default new Vuex.Store({
 
       state.spaceWidth = res.spaceWidth
       state.spaceHeight = res.spaceHeight
+      
+      console.log('update bubbles in store update dimensions')
 
       state.bubbles = tempBubbles;
 
     },
-    saveBubblesToLS:(state)=>{
+    saveBubblesToLS(state){
       window.localStorage.setItem("bubbleList", JSON.stringify(state.bubbles));
     }
   },
+  ///////////////////////////////////////////////////////////////////////
+  //////////////////////actions//////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////
   actions: {
-    synchronizeWithDBandLS : ({commit}) =>{
+    synchronizeWithDBandLS({commit}){
       let tempBubbles = []
       /*; //temporary */
       
@@ -147,7 +152,7 @@ export default new Vuex.Store({
         let temp = JSON.parse(window.localStorage.getItem("bubbleList"));
         console.log("Has a list");
         //this.state.bubbles = temp.sort(compareMoodCoord);
-        fetch(apiUrl+"/api/getData") //proxy to localhost:3001/api/getData see server.js
+        fetch(apiUrl+"/api/getData", {method: 'POST'}) //proxy to localhost:3001/api/getData see server.js
           .then(handleResponse)
           .then((res)=>{
             if(res.success && (res.data == undefined || res.data.length === 0)){ 
@@ -166,7 +171,7 @@ export default new Vuex.Store({
                 };
                 fetch(apiUrl+"/api/putData", requestOptions)
                 .then(handleResponse).then((res)=>{
-                  if(res.data.success){
+                  if(res.success){
                     console.log("before emitting addedToDB", temp[curr])//i=-1
                     this._vm.$socket.emit("addedToDB",  temp[curr]); 
                   }else{
@@ -229,7 +234,7 @@ export default new Vuex.Store({
                 };
                 fetch(apiUrl+"/api/putData", requestOptions)
                 .then(handleResponse).then((res)=>{
-                  if(res.data.success){
+                  if(res.success){
                     console.log("before emitting addedToDB", temp[curr])//i=-1
                     this._vm.$socket.emit("addedToDB",  temp[curr]); 
                   }else{
@@ -292,7 +297,7 @@ export default new Vuex.Store({
       commit('setBubbles', tempBubbles);
     },
 
-    addBubble: ({coommit}, bubble) => {
+    addBubble ({commit}, bubble) {
 	    //let currentIds = this.state.bubbles.map(bubble => bubble.id);
     	let idToBeAdded =Math.floor(Math.random()*360)//.toString(36).slice(2)
     	//while (currentIds.includes(idToBeAdded)) {
@@ -309,10 +314,10 @@ export default new Vuex.Store({
           'Content-Type': 'application/json',
         },
       };
-
+      console.log(this)
       fetch(apiUrl+"/api/putData", requestOptions)
-      .then(handleResponse).then(function (res) {
-		      if(res.data.success){
+      .then(handleResponse).then( (res)=>{
+		      if(res.success){
 		        this._vm.$socket.emit("addedToDB", bubble); 
 		      }else{
 		        console.log(res.data);
@@ -323,7 +328,7 @@ export default new Vuex.Store({
       /**
       update the bubble with matching id with the following content
       */
-      updateBubble : ({commit}, bubble) => {
+      updateBubble({commit}, bubble)  {
         console.log("Update bubble id: "+bubble.id);
         const requestOptions = {
           method: 'POST',
@@ -335,8 +340,8 @@ export default new Vuex.Store({
         };
   
         fetch(apiUrl+"/api/updateData", requestOptions)
-        .then(handleResponse).then(function (res) {
-          if(res.data.success){
+        .then(handleResponse).then( (res)=> {
+          if(res.success){
             this._vm.$socket.emit("updatedDB", bubble); 
           }else{
             console.log(res.data);
@@ -348,7 +353,7 @@ export default new Vuex.Store({
 
 
 
-    deleteBubble : ({commit}, id) => {
+    deleteBubble ({commit}, id) {
       console.log("Delete bubble id: "+id);
       const requestOptions = {
         method: 'DELETE',
@@ -360,8 +365,8 @@ export default new Vuex.Store({
       };
       
       fetch(apiUrl+"/api/deleteData", requestOptions)
-        .then(handleResponse).then(function (res) {
-	      if(res.data.success){
+        .then(handleResponse).then((res)=> {
+	      if(res.success){
 	        this._vm.$socket.emit("deletedInDB", id); 
 	      }else{
 	        console.log(res.data);
@@ -370,12 +375,12 @@ export default new Vuex.Store({
 	    /*on deleteInClients
 	  	*/
     },
-    addBubbleToSpace:({commit}, bubble)=>{
+    addBubbleToSpace ({commit}, bubble){
       commit('addBubbleToState', bubble)
       commit('putBubble',  {bubble:bubble,startX:0,startY:0})
     },
 
-    updateBubbleInSpace:({commit}, bubble)=>{
+    updateBubbleInSpace({commit}, bubble){
       commit('updateBubble', bubble)
       commit('putBubble',  {bubble:bubble,startX:0,startY:0})
     }
