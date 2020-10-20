@@ -22,17 +22,24 @@
 <script>
 import { mapState, mapActions, mapMutations } from 'vuex'
 import {calculateRadius, constructBackground} from '@/bubble/bubbleHelper'
+import moment from 'moment'
 
 export default {
     name: 'BubbleList',
     computed: {
-        //...mapState(['bubbles']),
+        ...mapState(['startDate', "endDate"]),
         bubbles(){
-            return this.$store.state.bubbles.map((b)=>{
+            return this.$store.state.bubbles.filter((b)=>{
                 b.style = {width: (calculateRadius(b)*10+5)+"px",
                 height: (calculateRadius(b)*10+5)+"px",
                 background: constructBackground(b)}
-                return b
+                if(b.date==""){
+                  return b
+                }
+                //console.log(b.date)
+                if(moment(b.date, "YYYY-M-D").isBetween(this.startDate, this.endDate, null, '[)')){
+                  return b
+                } 
             })
         }
     },

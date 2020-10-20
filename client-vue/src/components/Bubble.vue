@@ -1,8 +1,9 @@
 <template>
-    <div class="bubbleWrapper" :style='computedWrapperStyle'>
+    <div v-if="bubble.active" class="bubbleWrapper" :style='computedWrapperStyle'>
         <v-btn class="bubble" :style="computedBtnStyle" @click="registerClick">
-            <!---->
+            <!--{{bubble.coord[0]}}, {{bubble.coord[1]}}, {{bubble.coord[2]}}-->
             {{bubble.id}}:{{bubble.pos[0]}},{{bubble.pos[1]}}
+            
         </v-btn>
     </div>
 </template>

@@ -3,6 +3,7 @@ import Vuex from 'vuex'
 import {apiUrl} from '../api-config'
 import {spaceOrganizer} from './spaceOrganizer';
 const spreadsheet = require("../bubble/bubble-spreadsheet.json")
+import moment from 'moment'
 
 Vue.use(Vuex)
 
@@ -56,7 +57,9 @@ export default new Vuex.Store({
       tags: ['tired', 'cry'],
       active: true,
       pos:[],
-      }] 
+      }],
+      startDate: '2020',
+      endDate: '2021' 
   },
   mutations: {
     setBubbles(state, bubbles){
@@ -82,7 +85,7 @@ export default new Vuex.Store({
     },
 
     updateBubble (state, bubble){
-      const bubbles = state.bubbles.slice();
+      let bubbles = state.bubbles.slice();
       let i=0;
       for(; i<bubbles.length; i++){
         if(bubbles[i].id === bubble.id){
@@ -91,10 +94,70 @@ export default new Vuex.Store({
           break
         }
       }
+      state.bubbles = JSON.parse(JSON.stringify(bubbles))
+    },
+    removeAllBubblesFromSpace(state){
+      console.log("removeAllBubblesFromSpace")
+      for(let i=0; i<state.bubbles.length; i++){
+        spaceOrganizer.removeBubbleFromSpace(state.bubbles[i].id); 
+      }
     },
 
+    putAllBubbles(state){
+      let startX=0
+      let startY=0
+      let bubbles = state.bubbles.slice()
+      console.log("commit, put all bubbles in space")
+      for(let i=0; i<bubbles.length; i++){
+        let bubble=bubbles[i];
+        bubbles[i].active = true
+        if(bubble.date!="" && !moment(bubble.date).isBetween(state.startDate, state.endDate, undefined, '[)')){
+          console.log('bubble not in range', bubble.id);
+          bubbles[i].active = false;
+          //console.log(state.bubbles[i])
+          continue
+        }
+        let xy = spaceOrganizer.putBubble(bubble, startX, startY);
+        let tempBubbles = null;
+        while(!xy  || xy.length<=0){
+          
+          let res = spaceOrganizer.updateSpaceDimensions(bubbles, 
+            state.spaceWidth, state.spaceHeight + state.radiusOffset*3);
+
+          tempBubbles =  res.bubbles
+
+          state.spaceWidth = res.spaceWidth
+          state.spaceHeight = res.spaceHeight
+
+          xy = spaceOrganizer.putBubble(bubble, startX, startY)
+        }
+        if(tempBubbles){
+          console.log("state.bubbles = tempBubbles")
+          bubbles = JSON.parse(JSON.stringify(tempBubbles));
+        }
+        //let foundIndex = state.bubbles.findIndex(x => x.id == bubble.id);
+        //if(foundIndex!=-1){
+        bubbles[i].pos = xy;
+        bubbles[i].active = true;
+        //}else{
+        //  console.log('add bubble first before placement')
+        //}
+      }
+      //console.log(state.bubbles)
+      state.bubbles = JSON.parse(JSON.stringify(bubbles))
+    },
     putBubble(state, payload){
       let bubble=payload.bubble
+      if(!moment(bubble.date).isBetween(state.startDate, state.endDate, undefined, '[)')){
+        console.log('bubble not in range');
+        let foundIndex = state.bubbles.findIndex(x => x.id == bubble.id);
+        if(foundIndex!=-1){
+          state.bubbles[foundIndex].active = false;
+        }else{
+          console.log('add bubble first before placement')
+        }
+        return
+      }
       let startX=payload.startX
       let startY=payload.startY
       console.log("commit, put bubble in space")
@@ -119,6 +182,7 @@ export default new Vuex.Store({
       let foundIndex = state.bubbles.findIndex(x => x.id == bubble.id);
       if(foundIndex!=-1){
         state.bubbles[foundIndex].pos = xy;
+        state.bubbles[foundIndex].active = true;
       }else{
         console.log('add bubble first before placement')
       }
@@ -388,6 +452,11 @@ export default new Vuex.Store({
     updateBubbleInSpace({commit}, bubble){
       commit('updateBubble', bubble)
       commit('putBubble',  {bubble:bubble,startX:0,startY:0})
+    },
+
+    relocateAllBubbles({commit}){
+      commit('removeAllBubblesFromSpace')
+      commit('putAllBubbles')
     }
   },
   modules: {
