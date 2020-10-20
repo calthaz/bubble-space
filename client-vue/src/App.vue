@@ -32,7 +32,7 @@
     </v-app-bar>
 
     <v-main>
-      <BubbleSpace v-if='showSpace' :show-list="showList"/>
+      <BubbleSpace v-if='showSpace' :show-list="showList" @update-bubble="openUpdateBubbleDialog"/>
       <BubbleList v-if='showList' @update-bubble="openUpdateBubbleDialog"/>
       <BubbleDialog :dialog="showAddDialog" :bubble='emptyBubble'
         :handleSuperFormClose='handleAddFormClose'
@@ -104,10 +104,22 @@ export default {
       },
 
       openUpdateBubbleDialog(bubble){
+        console.log("openUpdateBubbleDialog", bubble)
         this.bubbleToBeUpdated = bubble;
         this.showAddDialog=false;
         this.showUpdateDialog=true;
+      },
+
+      updateBubbleFromDialog(bubble){
+        console.log("updateBubbleFromDialog", bubble)
+        this.$store.dispatch('updateBubble', bubble)
+      },
+
+      deleteBubbleFromDialog(id){
+        this.$store.dispatch('deleteBubble', id)
       }
+
+
   }
 
 };

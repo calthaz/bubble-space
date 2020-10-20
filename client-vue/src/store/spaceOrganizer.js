@@ -270,4 +270,5 @@ function printArray(arr){
 export let spaceOrganizer = {
     putBubble,
     updateSpaceDimensions,
+    removeBubbleFromSpace
 }

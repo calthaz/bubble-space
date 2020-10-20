@@ -39,6 +39,7 @@ export default {
     methods:{
         registerClick(bubble){
             console.log('bubble list clicked: ', bubble.id)
+            console.log("emit update-bubble", bubble)
             this.$emit('update-bubble', bubble)
         }
     }

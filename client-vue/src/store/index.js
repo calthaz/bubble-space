@@ -112,6 +112,7 @@ export default new Vuex.Store({
         xy = spaceOrganizer.putBubble(bubble, startX, startY)
       }
       if(tempBubbles){
+        console.log("state.bubbles = tempBubbles")
         state.bubbles = tempBubbles;
       }
       let foundIndex = state.bubbles.findIndex(x => x.id == bubble.id);
@@ -132,8 +133,11 @@ export default new Vuex.Store({
       state.spaceHeight = res.spaceHeight
       
       console.log('update bubbles in store update dimensions')
-
-      state.bubbles = tempBubbles;
+      console.log(tempBubbles)
+      //for (b in tempBubbles){
+      //  b.pos=[0, 0]
+      //}
+      state.bubbles = JSON.parse(JSON.stringify(tempBubbles));
 
     },
     saveBubblesToLS(state){
@@ -369,7 +373,7 @@ export default new Vuex.Store({
 	      if(res.success){
 	        this._vm.$socket.emit("deletedInDB", id); 
 	      }else{
-	        console.log(res.data);
+	        console.log(res);
 	      }
 	    });
 	    /*on deleteInClients
