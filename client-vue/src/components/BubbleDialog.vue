@@ -18,7 +18,7 @@
             >
             <v-row>
               <v-col cols='12'>
-                {{(buffer.title||"Untitled")}}, [{{buffer.coord[0]}}, {{buffer.coord[1]}}]<br/>
+                {{(buffer.title||"Untitled")}}, [{{buffer.coord[0]}}, {{buffer.coord[1]}}, {{buffer.coord[2]}}]<br/>
                 {{buffer.situation}}
               </v-col>
             </v-row>
@@ -51,6 +51,16 @@
                 <v-slider
                   label="Arousal*"
                   v-model="buffer.coord[1]"
+                  :max="5" :min="-5"
+                  ticks step='1' thumb-label
+                  required
+                />
+              </v-col>
+              <v-col
+                cols="12">
+                <v-slider
+                  label="Dominance*"
+                  v-model="buffer.coord[2]"
                   :max="5" :min="-5"
                   ticks step='1' thumb-label
                   required
@@ -116,7 +126,7 @@ import moment from 'moment'
 export default {
     name: "BubbleDialog",
     data: () => ({
-        buffer: {coord:[0, 0]},
+        buffer: {coord:[0, 0, 0]},
         valid: true,
         //dateRules: [validateDate],
     }),
@@ -131,7 +141,7 @@ export default {
         title: {type: String, required: true},
     },
     mounted(){
-      
+
         this.buffer = JSON.parse(JSON.stringify(this.bubble))
     },
     watch: { 

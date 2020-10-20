@@ -12,7 +12,7 @@
           <v-list-item-content>
             <v-list-item-title v-if="item.title">{{item.title}}</v-list-item-title>
             <v-list-item-title v-if="!item.title">Untitled</v-list-item-title>
-            <v-list-item-subtitle>[{{item.coord[0]}}, {{item.coord[1]}}], 
+            <v-list-item-subtitle>[{{item.coord[0]}}, {{item.coord[1]}}, {{item.coord[2]}}], 
                 {{item.situation}}</v-list-item-subtitle>
           </v-list-item-content>
         </v-list-item>

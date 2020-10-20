@@ -44,7 +44,7 @@ def getData():
 @app.route("/api/putData", methods=['POST'])
 def putData():
     message = request.get_json()
-    if(not ('id' in message) or not ('coord' in message) or len(message['coord'])!=2):
+    if(not ('id' in message) or not ('coord' in message) or len(message['coord'])!=3):
         message['sussess'] = False
         message['error'] = 'INVALID INPUTS'
         return message, 400
@@ -73,7 +73,7 @@ def putData():
 @app.route('/api/updateData', methods=['POST'])
 def updateData():
     message = request.get_json()
-    if(not ('id' in message) or not ('coord' in message) or len(message['coord'])!=2):
+    if(not ('id' in message) or not ('coord' in message) or len(message['coord'])!=3):
         message['sussess'] = False
         message['error'] = 'INVALID QUERY'
         return message, 400

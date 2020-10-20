@@ -34,10 +34,11 @@ export default new Vuex.Store({
     //moveCover,
     bubbles: [{
       id: 1,
-      coord:[1,1], 
+      coord:[1,1, 2], 
       title: 'something happy and exciting',
       date: '2018-05-08',
       situation: 'just learned first half of the Fourier transform and started building this again.',
+      
       thoughts: 'I should probably write a matlab demo about Fourier transform',
       feelings: 'excited, attempting???',
       tags: ['coding', 'math'],
@@ -46,7 +47,7 @@ export default new Vuex.Store({
       },
       {
       id: 2,
-      coord:[-3,-5], 
+      coord:[-3,-5, -2], 
       title: 'sad sunny friday',
       date: '2018-05-04',
       situation: 'German midterm, Vicky had to go home, awkward questions, went swimming, played piano with Jing, tried her dresses, looked good.',
