@@ -1,16 +1,19 @@
 <template>
+  <transition name="float-and-explode">
     <div v-if="bubble.active" class="bubbleWrapper" :style='computedWrapperStyle'>
         <v-btn class="bubble" :style="computedBtnStyle" @click="registerClick">
-            <!--{{bubble.coord[0]}}, {{bubble.coord[1]}}, {{bubble.coord[2]}}-->
-            {{bubble.id}}:{{bubble.pos[0]}},{{bubble.pos[1]}}
-            
+            <!--{{bubble.coord[0]}}, {{bubble.coord[1]}}, {{bubble.coord[2]}} 
+            {{bubble.id}}:{{bubble.pos[0]}},{{bubble.pos[1]}}-->
         </v-btn>
     </div>
+  </transition>
 </template>
 
 <script>
 import {calculateRadius, constructBackground} from '@/bubble/bubbleHelper'
 import { mapState } from 'vuex'
+import moment from 'moment'
+
 export default {
     name: 'Bubble',
     props: {
@@ -24,7 +27,7 @@ export default {
         }
     },
     computed:{
-        ...mapState(['gridSize']),
+        ...mapState(['gridSize', 'spaceWidth', 'spaceHeight', 'startDate', 'endDate']),
         r(){
             return calculateRadius(this.bubble);
         },
@@ -40,7 +43,16 @@ export default {
                 //if(this.clicked==1)
                 //    return { top: (top)+'px', left: (left)+"px", zIndex:361}
                 //else
-                return { top: (top)+'px', left: (left)+"px", zIndex}
+                let transitionTime = 0.5; 
+                if(this.bubble.date && this.bubble.date!=""){
+                    let distance = moment(this.bubble.date, "YYYY-M-D").diff(
+                        moment(this.startDate, "YYYY-M-D"), "days")
+                    let totalDays = moment(this.endDate, "YYYY-M-D").diff(
+                        moment(this.startDate, "YYYY-M-D"), "days")
+                    transitionTime += distance/totalDays*2
+                }
+                
+                return { top: (top)+'px', left: (left)+"px", zIndex, transition:`top ${transitionTime}s, left ${transitionTime}s `}
             }else{
                 return {position: 'relative'}
             }
@@ -69,7 +81,7 @@ export default {
             }else{
                 this.click=0
             }*/
-        },
+        }
     }
 }
 </script>
@@ -79,6 +91,10 @@ export default {
     margin: 5px;
     display: inline-block;
     position: absolute;
+    top:100%;
+    left:0px;
+    //transition: all .5s;
+    //transition: left .5s;
   }
 
   .bubble{
@@ -91,4 +107,32 @@ export default {
     //box-shadow: 0 4px 20px 0px rgba(0, 0, 0, 0.12);
     padding: 0px !important;
   }
+    .float-and-explode-enter {
+        top:100% !important;
+        left:0px !important;
+    }
+    .float-and-explode-enter-active {
+       // transition: all .5s;
+    }
+  .float-and-explode-leave-active {
+    animation: explode .5s;
+  }
+
+  @keyframes explode {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.5);
+        opacity: 0.5;
+    }
+    100% {
+        transform: scale(2);
+        opacity: 0;
+    }
+  }
+      .float-and-explode-leave-to {
+     opacity: 0;
+    }
 </style>

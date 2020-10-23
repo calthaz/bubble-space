@@ -1,7 +1,7 @@
 let constructBackground = (bubble) => {
-    let pleasure = bubble.coord[0]/5;
-    let arousal = bubble.coord[1]/5;
-    let dominance = bubble.coord[2]/5;
+    let pleasure = bubble.coord[0]/7;
+    let arousal = bubble.coord[1]/7;
+    let dominance = bubble.coord[2]/7;
     let bg = `linear-gradient(60deg, rgba(242, 255, 38, ${Math.max(0, pleasure)}), `
              +`rgba(224, 251, 0, ${Math.max(0, pleasure)})), `//yellow
            +`linear-gradient(240deg,  rgba(247, 38, 251, ${Math.max(0, -pleasure)}), `

@@ -250,7 +250,7 @@ export default new Vuex.Store({
               }
             }else if(res.error){
               //db is not accessible
-              alert("ls not empty, db is not accessible at init.")
+              alert("ls not empty, db is not accessible at init."+ res.error)
               tempBubbles = temp.sort(compareMoodCoord);
               commit('setBubbles', tempBubbles)
               for (let i = 0; i < tempBubbles.length; i++) {

@@ -75,5 +75,7 @@ export default {
 </script>
 
 <style scoped>
-
+#space{
+    position: relative;
+}
 </style>

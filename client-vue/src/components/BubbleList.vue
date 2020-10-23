@@ -29,7 +29,7 @@ export default {
     computed: {
         ...mapState(['startDate', "endDate"]),
         bubbles(){
-            return this.$store.state.bubbles.filter((b)=>{
+            let activeBubbles =  this.$store.state.bubbles.filter((b)=>{
                 b.style = {width: (calculateRadius(b)*10+5)+"px",
                 height: (calculateRadius(b)*10+5)+"px",
                 background: constructBackground(b)}
@@ -41,6 +41,16 @@ export default {
                   return b
                 } 
             })
+            activeBubbles.sort((a, b)=>{
+                let bLessThanA = moment(b.date, "YYYY-M-D").isSameOrBefore(moment(a.date, "YYYY-M-D"))
+                console.log(b.date, bLessThanA, a.date)
+                if(bLessThanA) {
+                    return 1
+                }else{
+                    return -1
+                }
+            })
+            return activeBubbles
         }
     },
     methods:{

@@ -14,6 +14,10 @@
       <v-btn icon @click='handleAddFormOpen'>
         <v-icon>mdi-plus</v-icon>
       </v-btn>
+
+      <v-btn icon @click='saveBubblesToLS'>
+        <v-icon>mdi-download-outline</v-icon>
+      </v-btn>
       
       <template v-slot:extension>
         <v-btn icon @click="setEarlierPeriod">
@@ -58,6 +62,12 @@
                 ></v-text-field>
               </v-col>
             </v-row>
+            <v-row>
+              <v-btn text @click="setRangeThisWeek"
+              >This Week</v-btn>
+              <v-btn text @click="setRangeThisMonth"
+              >This Month</v-btn>
+            </v-row>
             </v-form>
           </v-container>
         </v-card-text>
@@ -80,8 +90,11 @@
         </v-card-actions>
       </v-card>
       </v-dialog>
-
+      
+      <BubbleChart/>
+      
       <BubbleSpace v-if='showSpace' :show-list="showList" @update-bubble="openUpdateBubbleDialog"/>
+      
       <BubbleList v-if='showList' @update-bubble="openUpdateBubbleDialog"/>
       <BubbleDialog :dialog="showAddDialog" :bubble='emptyBubble'
         :handleSuperFormClose='handleAddFormClose'
@@ -103,9 +116,10 @@
 import BubbleSpace from './components/BubbleSpace';
 import BubbleList from './components/BubbleList';
 import BubbleDialog from './components/BubbleDialog';
+import BubbleChart from './components/BubbleChart';
 import {emptyBubble} from '@/bubble/bubbleHelper';
 import moment from 'moment';
-import { mapState } from 'vuex';
+import { mapMutations, mapState } from 'vuex';
 
 export default {
   name: 'App',
@@ -114,6 +128,7 @@ export default {
     BubbleSpace,
     BubbleList,
     BubbleDialog,
+    BubbleChart
   },
 
   data: () => ({
@@ -143,10 +158,15 @@ export default {
     } else {
         this.showSpace = true;
     }
-    this.tempStartDate = this.startDate;
-    this.tempEndDate = this.endDate;
+    this.setRangeThisWeek()
+    this.$store.state.endDate = this.tempEndDate
+    this.$store.state.startDate = this.tempStartDate
+    this.showDateDialog = false;
+    this.validRange = true;
+    this.$store.dispatch('relocateAllBubbles')
   },
   methods:{
+      ...mapMutations(['saveBubblesToLS']),
       handleAddFormOpen: function(event){
         this.showAddDialog=true;
         this.showUpdateDialog=false;
@@ -183,6 +203,24 @@ export default {
 
       openDateDialog(){
         this.showDateDialog=true;
+      },
+
+      setRangeThisWeek(){
+        let currentDate = moment();
+
+        let weekStart = currentDate.clone().startOf('week').format('YYYY-M-D');
+        let weekEnd = currentDate.clone().endOf('week').add(1, 'day').format('YYYY-M-D');
+        this.tempStartDate = weekStart;
+        this.tempEndDate = weekEnd;
+      },
+
+      setRangeThisMonth(){
+        let currentDate = moment();
+
+        let monthStart = currentDate.clone().startOf('month').format('YYYY-M');
+        let monthEnd = currentDate.clone().endOf('month').add(1, 'day').format('YYYY-M');
+        this.tempStartDate = monthStart;
+        this.tempEndDate = monthEnd;
       },
 
       validateDate: function(value){
@@ -236,8 +274,8 @@ export default {
           newStartDate = moment(this.tempStartDate, "YYYY-M").subtract(1, 'month').format('YYYY-M')
           newEndDate = moment(this.tempEndDate, "YYYY-M").subtract(1, 'month').format('YYYY-M')
         }else{
-          newStartDate = moment(this.tempStartDate, "YYYY-M-D").subtract(1, 'day').format('YYYY-M-D')
-          newEndDate = moment(this.tempEndDate, "YYYY-M-D").subtract(1, 'day').format('YYYY-M-D')
+          newStartDate = moment(this.tempStartDate, "YYYY-M-D").subtract(1, 'week').format('YYYY-M-D')
+          newEndDate = moment(this.tempEndDate, "YYYY-M-D").subtract(1, 'week').format('YYYY-M-D')
         }
         console.log(newStartDate, newEndDate)
         this.tempStartDate = newStartDate;
@@ -266,8 +304,8 @@ export default {
           newStartDate = moment(this.tempStartDate, "YYYY-M").add(1, 'month').format('YYYY-M')
           newEndDate = moment(this.tempEndDate, "YYYY-M").add(1, 'month').format('YYYY-M')
         }else{
-          newStartDate = moment(this.tempStartDate, "YYYY-M-D").add(1, 'day').format('YYYY-M-D')
-          newEndDate = moment(this.tempEndDate, "YYYY-M-D").add(1, 'day').format('YYYY-M-D')
+          newStartDate = moment(this.tempStartDate, "YYYY-M-D").add(1, 'week').format('YYYY-M-D')
+          newEndDate = moment(this.tempEndDate, "YYYY-M-D").add(1, 'week').format('YYYY-M-D')
         }
         console.log(newStartDate, newEndDate)
         this.tempStartDate = newStartDate;
